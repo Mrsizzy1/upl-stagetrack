@@ -65,11 +65,14 @@ la clôture, les corrections et les exports.
 
 | Vérification | Résultat |
 | --- | --- |
-| 61 tests unitaires (`test/unit`) | Exécutés : tous réussis |
-| Migrations sur PostgreSQL 16, compte sans droits d'administrateur | Appliquées sans erreur |
+| 74 tests unitaires (`test/unit`) | Exécutés : tous réussis |
+| Migrations sur PostgreSQL 16 | Appliquées sans erreur |
 | 17 contrôles de contraintes SQL (`test/sql`) | Exécutés : tous réussis |
-| Cohérence TypeScript du backend et du frontend | Vérifiée avec les bibliothèques remplacées par des déclarations vides |
-| `npm install`, `prisma validate`, compilation complète, tests d'intégration, interface dans le navigateur | **À exécuter** : l'environnement de développement initial n'avait pas accès au registre npm |
+| 29 tests d'intégration (API réelle, base de test) | Exécutés : tous réussis |
+| `npm install`, `prisma validate`, compilation TypeScript et de production | Réussis |
+| Interface dans le navigateur, mobile et ordinateur | Contrôlée (voir [docs/RAPPORT-TRAVAUX.md](docs/RAPPORT-TRAVAUX.md)) |
+
+Rapport détaillé des travaux (audit, corrections, vérifications) : [docs/RAPPORT-TRAVAUX.md](docs/RAPPORT-TRAVAUX.md).
 
 Commande pour confirmer que les migrations écrites à la main correspondent au schéma :
 
