@@ -1,0 +1,21 @@
+{
+  "name": "upl-stagetrack",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UPL StageTrack — gestion des présences des stagiaires de l'Université Protestante de Lubumbashi par QR Code",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "dev:api": "npm run start:dev -w backend",
+    "dev:web": "npm run dev -w frontend",
+    "test": "npm run test -w backend",
+    "build": "npm run build -w backend && npm run build -w frontend"
+  }
+}

@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+/*
+ * Identité visuelle de l'Université Protestante de Lubumbashi, tirée du logo officiel
+ * (public/brand/upl-logo.png) : bleu #0120A7, rouge #FE0404, or #F9B233, blanc.
+ *  - bleu : couleur principale (navigation, titres, actions) ; nuances calculées à partir du bleu du logo ;
+ *  - or : accent discret (élément actif, filets) ;
+ *  - rouge : refus et erreurs, en teinte assombrie pour rester lisible sur fond clair ;
+ *  - vert : réservé à l'état « accepté / présent » (lecture immédiate par l'agent de pointage).
+ * Police Inter, embarquée avec l'application (aucun appel à un service externe).
+ */
+@theme {
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --color-upl-blue-950: #030d3d;
+  --color-upl-blue-900: #0a1a6b;
+  --color-upl-blue-800: #2b3a7a;
+  --color-upl-blue-700: #0120a7;
+  --color-upl-blue-600: #1d3cc4;
+  --color-upl-blue-100: #e1e5f4;
+  --color-upl-blue-50: #f4f6fc;
+
+  --color-upl-gold-800: #7a4f00;
+  --color-upl-gold-500: #f9b233;
+  --color-upl-gold-100: #fef2d9;
+
+  --color-upl-red-600: #fe0404;
+
+  --color-danger-700: #b80d0d;
+  --color-danger-100: #fde4e4;
+
+  --color-success-700: #1c6b3e;
+  --color-success-600: #2e8b57;
+  --color-success-100: #dcf1e4;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-upl-blue-950);
+  background: var(--color-upl-blue-50);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Impression (rapports, listes) : navigation masquée, en-tête institutionnel affiché. */
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

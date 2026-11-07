@@ -1,0 +1,26 @@
+# Base de données de développement et de test.
+# Production : voir docs/DEPLOIEMENT.md (Phase 10).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: upl_stagetrack_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stagetrack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stagetrack_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-stagetrack}
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/prisma/init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stagetrack} -d ${POSTGRES_DB:-stagetrack}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

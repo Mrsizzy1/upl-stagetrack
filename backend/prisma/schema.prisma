@@ -1,0 +1,353 @@
+// UPL StageTrack — modèle de données (Phase 3)
+//
+// Conventions :
+//  - identifiants UUID générés par l'application ;
+//  - horodatages en `timestamptz` (UTC), affichés en Africa/Lubumbashi ;
+//  - dates calendaires locales en `date`.
+//
+// Contraintes que Prisma ne sait pas exprimer : voir
+// migrations/20261107000100_contraintes_metier/migration.sql
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleCode {
+  ADMIN
+  SUPERVISOR
+  SCAN_AGENT
+  STUDENT
+}
+
+enum StudentStatus {
+  ACTIVE
+  SUSPENDED
+  COMPLETED
+}
+
+enum SessionType {
+  MORNING
+  EVENING
+}
+
+enum SessionState {
+  OPEN
+  CLOSED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+}
+
+enum CaptureMethod {
+  QR
+  MANUAL
+  SYSTEM
+}
+
+enum CredentialStatus {
+  ACTIVE
+  REVOKED
+  REPLACED
+}
+
+enum ScanResult {
+  ACCEPTED
+  ALREADY_RECORDED
+  INVALID_QR
+  REVOKED_QR
+  UNKNOWN_MATRICULE
+  STUDENT_SUSPENDED
+  NOT_EXPECTED
+  TOO_EARLY
+  SESSION_CLOSED
+  NO_SESSION
+  FORBIDDEN
+}
+
+model Role {
+  id    String   @id @default(uuid()) @db.Uuid
+  code  RoleCode @unique
+  label String
+  users User[]
+}
+
+model User {
+  id                 String    @id @default(uuid()) @db.Uuid
+  username           String    @unique
+  email              String?   @unique
+  passwordHash       String
+  fullName           String
+  roleId             String    @db.Uuid
+  role               Role      @relation(fields: [roleId], references: [id])
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(true)
+  failedLoginCount   Int       @default(0)
+  lockedUntil        DateTime? @db.Timestamptz(3)
+  lastLoginAt        DateTime? @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+
+  student              Student?
+  refreshTokens        RefreshToken[]
+  supervisedInternships Internship[]          @relation("InternshipSupervisor")
+  issuedCredentials    QRCodeCredential[]     @relation("CredentialIssuedBy")
+  revokedCredentials   QRCodeCredential[]     @relation("CredentialRevokedBy")
+  recordedAttendances  Attendance[]           @relation("AttendanceRecordedBy")
+  corrections          AttendanceCorrection[] @relation("CorrectionAuthor")
+  schedules            AttendanceSchedule[]   @relation("ScheduleAuthor")
+  nonWorkingDays       NonWorkingDay[]        @relation("NonWorkingDayAuthor")
+
+  @@index([roleId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime  @db.Timestamptz(3)
+  revokedAt DateTime? @db.Timestamptz(3)
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+}
+
+model Faculty {
+  id          String       @id @default(uuid()) @db.Uuid
+  code        String       @unique
+  name        String       @unique
+  departments Department[]
+  students    Student[]
+}
+
+model Department {
+  id        String    @id @default(uuid()) @db.Uuid
+  facultyId String    @db.Uuid
+  faculty   Faculty   @relation(fields: [facultyId], references: [id])
+  code      String
+  name      String
+  students  Student[]
+
+  @@unique([facultyId, name])
+  @@unique([facultyId, code])
+}
+
+model Promotion {
+  id        String    @id @default(uuid()) @db.Uuid
+  code      String    @unique
+  label     String
+  sortOrder Int
+  students  Student[]
+}
+
+model Student {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String?       @unique @db.Uuid
+  user         User?         @relation(fields: [userId], references: [id])
+  matricule    String        @unique
+  lastName     String // Nom
+  middleName   String // Postnom
+  firstName    String // Prénom
+  facultyId    String        @db.Uuid
+  faculty      Faculty       @relation(fields: [facultyId], references: [id])
+  departmentId String        @db.Uuid
+  department   Department    @relation(fields: [departmentId], references: [id])
+  promotionId  String        @db.Uuid
+  promotion    Promotion     @relation(fields: [promotionId], references: [id])
+  email        String?
+  phone        String?
+  photoPath    String?
+  enrolledAt   DateTime      @db.Date
+  status       StudentStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+
+  internships Internship[]
+  credentials QRCodeCredential[]
+  attendances Attendance[]
+
+  @@index([lastName, middleName, firstName])
+  @@index([facultyId, departmentId, promotionId])
+  @@index([status])
+}
+
+model Internship {
+  id           String   @id @default(uuid()) @db.Uuid
+  studentId    String   @db.Uuid
+  student      Student  @relation(fields: [studentId], references: [id])
+  startDate    DateTime @db.Date
+  endDate      DateTime @db.Date
+  hostService  String?
+  supervisorId String?  @db.Uuid
+  supervisor   User?    @relation("InternshipSupervisor", fields: [supervisorId], references: [id])
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([studentId, startDate, endDate])
+}
+
+model QRCodeCredential {
+  id           String           @id @default(uuid()) @db.Uuid
+  studentId    String           @db.Uuid
+  student      Student          @relation(fields: [studentId], references: [id])
+  /// Empreinte SHA-256 (hexadécimal) du jeton contenu dans le QR.
+  tokenHash    String           @unique
+  /// Copie chiffrée AES-256-GCM du jeton (iv.tag.texte, base64url) pour réafficher le QR.
+  tokenSealed  String
+  status       CredentialStatus @default(ACTIVE)
+  /// true tant que le QR est actif, NULL ensuite : garantit un seul QR actif par étudiant.
+  activeSlot   Boolean?         @default(true)
+  issuedAt     DateTime         @default(now()) @db.Timestamptz(3)
+  issuedById   String           @db.Uuid
+  issuedBy     User             @relation("CredentialIssuedBy", fields: [issuedById], references: [id])
+  revokedAt    DateTime?        @db.Timestamptz(3)
+  revokedById  String?          @db.Uuid
+  revokedBy    User?            @relation("CredentialRevokedBy", fields: [revokedById], references: [id])
+  revokeReason String?
+
+  @@unique([studentId, activeSlot])
+  @@index([studentId, status])
+}
+
+model AttendanceSchedule {
+  id              String      @id @default(uuid()) @db.Uuid
+  sessionType     SessionType
+  /// Première minute acceptée depuis minuit (07h45 = 465).
+  opensAtMinute   Int
+  /// Dernière minute acceptée, incluse (08h45 = 525).
+  closesAtMinute  Int
+  /// Dernière minute « à l'heure », incluse. NULL = aucun retard.
+  lateAfterMinute Int?
+  /// Jours ISO : 1 = lundi … 7 = dimanche.
+  activeWeekdays  Int[]
+  /// Date locale d'entrée en vigueur.
+  effectiveFrom   DateTime    @db.Date
+  createdById     String?     @db.Uuid
+  createdBy       User?       @relation("ScheduleAuthor", fields: [createdById], references: [id])
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+
+  sessions AttendanceSession[]
+
+  @@unique([sessionType, effectiveFrom])
+}
+
+/// Jour sans pointage (férié, congé académique) : aucun scan accepté, aucune absence calculée.
+model NonWorkingDay {
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @unique @db.Date
+  label       String
+  createdById String?  @db.Uuid
+  createdBy   User?    @relation("NonWorkingDayAuthor", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model AttendanceSession {
+  id            String             @id @default(uuid()) @db.Uuid
+  date          DateTime           @db.Date
+  sessionType   SessionType
+  scheduleId    String             @db.Uuid
+  schedule      AttendanceSchedule @relation(fields: [scheduleId], references: [id])
+  opensAt       DateTime           @db.Timestamptz(3)
+  /// Borne exclusive : accepté si opensAt <= t < closesAt.
+  closesAt      DateTime           @db.Timestamptz(3)
+  /// En retard si t >= lateFrom. NULL = aucun retard.
+  lateFrom      DateTime?          @db.Timestamptz(3)
+  state         SessionState       @default(OPEN)
+  closedAt      DateTime?          @db.Timestamptz(3)
+  expectedCount Int?
+  presentCount  Int?
+  lateCount     Int?
+  absentCount   Int?
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+
+  attendances Attendance[]
+
+  @@unique([date, sessionType])
+  @@index([state, closesAt])
+}
+
+model Attendance {
+  id           String            @id @default(uuid()) @db.Uuid
+  studentId    String            @db.Uuid
+  student      Student           @relation(fields: [studentId], references: [id])
+  sessionId    String            @db.Uuid
+  session      AttendanceSession @relation(fields: [sessionId], references: [id])
+  date         DateTime          @db.Date
+  sessionType  SessionType
+  status       AttendanceStatus
+  /// Heure serveur du pointage ; NULL pour une absence.
+  recordedAt   DateTime?         @db.Timestamptz(3)
+  method       CaptureMethod
+  recordedById String?           @db.Uuid
+  recordedBy   User?             @relation("AttendanceRecordedBy", fields: [recordedById], references: [id])
+  manualReason String?
+  isCorrected  Boolean           @default(false)
+  createdAt    DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime          @updatedAt @db.Timestamptz(3)
+
+  corrections AttendanceCorrection[]
+
+  @@unique([studentId, date, sessionType])
+  @@index([sessionId, status])
+  @@index([date, sessionType])
+}
+
+model AttendanceCorrection {
+  id             String           @id @default(uuid()) @db.Uuid
+  attendanceId   String           @db.Uuid
+  attendance     Attendance       @relation(fields: [attendanceId], references: [id])
+  previousStatus AttendanceStatus
+  newStatus      AttendanceStatus
+  reason         String
+  correctedById  String           @db.Uuid
+  correctedBy    User             @relation("CorrectionAuthor", fields: [correctedById], references: [id])
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@index([attendanceId])
+}
+
+/// Journal de chaque tentative de scan. Sans clé étrangère : il doit garder la trace
+/// d'un jeton inconnu et survivre à toute modification des autres tables.
+model ScanAttempt {
+  id           String        @id @default(uuid()) @db.Uuid
+  scannedAt    DateTime      @db.Timestamptz(3)
+  agentId      String?       @db.Uuid
+  studentId    String?       @db.Uuid
+  credentialId String?       @db.Uuid
+  method       CaptureMethod
+  result       ScanResult
+  sessionType  SessionType?
+  attendanceId String?       @db.Uuid
+  ip           String?
+  userAgent    String?
+
+  @@index([scannedAt])
+  @@index([studentId, scannedAt])
+}
+
+/// Journal d'audit en ajout seul (UPDATE et DELETE retirés au rôle applicatif).
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  at         DateTime @default(now()) @db.Timestamptz(3)
+  actorId    String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+
+  @@index([entityType, entityId])
+  @@index([actorId, at])
+  @@index([at])
+}

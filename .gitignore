@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+storage/
+.DS_Store
+!.env.production.example
+deploy/certs/*
+!deploy/certs/.gitkeep
+backend/storage-test/
