@@ -92,6 +92,14 @@ export class CreateStudentDto {
 }
 
 export class UpdateStudentDto {
+  /** Correction d'un matricule mal saisi (l'identifiant de connexion de l'étudiant suit). */
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(30)
+  matricule?: string;
+
   @IsOptional()
   @Transform(trim)
   @IsString()

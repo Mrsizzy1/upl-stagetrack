@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* Écrans peu hauts : petite tablette en paysage (short), téléphone à l'horizontale (tiny). */
+@custom-variant short (@media (max-height: 620px));
+@custom-variant tiny (@media (max-height: 480px));
+
 /*
  * Identité visuelle de l'Université Protestante de Lubumbashi, tirée du logo officiel
  * (public/brand/upl-logo.png) : bleu #0120A7, rouge #FE0404, or #F9B233, blanc.

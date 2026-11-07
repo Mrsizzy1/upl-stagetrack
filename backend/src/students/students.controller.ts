@@ -94,6 +94,14 @@ export class StudentsController {
     return this.students.update(id, dto, actor, ip(req));
   }
 
+  /** Suppression d'un étudiant enregistré par erreur : refusée s'il a des pointages. Motif obligatoire. */
+  @Roles('ADMIN')
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReasonDto, @CurrentUser() actor: AuthUser, @Req() req: Request): Promise<void> {
+    await this.students.remove(id, dto.reason, actor, ip(req));
+  }
+
   @Roles('ADMIN')
   @Patch(':id/status')
   changeStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ChangeStatusDto, @CurrentUser() actor: AuthUser, @Req() req: Request) {

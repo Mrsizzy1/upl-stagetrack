@@ -64,7 +64,11 @@ export function StudentFormPage() {
         phone: form.phone,
         enrolledAt: form.enrolledAt,
       };
-      if (editing) return api.patch<StudentDetail>(`/students/${id}`, common);
+      if (editing) {
+        // Le matricule n'est envoyé que s'il a été corrigé (l'identifiant de connexion de l'étudiant suit).
+        const matriculeChanged = form.matricule.trim().toUpperCase() !== existing.data?.matricule;
+        return api.patch<StudentDetail>(`/students/${id}`, { ...common, ...(matriculeChanged ? { matricule: form.matricule } : {}) });
+      }
       return api.post<StudentDetail>('/students', {
         ...common,
         matricule: form.matricule,
@@ -98,8 +102,12 @@ export function StudentFormPage() {
         <ErrorAlert error={save.error ?? existing.error} />
         <Card title="Identité">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Matricule" required hint={editing ? 'Le matricule ne peut pas être modifié' : undefined}>
-              {(fid) => <Input id={fid} value={form.matricule} onChange={set('matricule')} required disabled={editing} maxLength={30} />}
+            <Field
+              label="Matricule"
+              required
+              hint={editing ? "Modifiable pour corriger une erreur de saisie : l'identifiant de connexion de l'étudiant change aussi." : undefined}
+            >
+              {(fid) => <Input id={fid} value={form.matricule} onChange={set('matricule')} required maxLength={30} />}
             </Field>
             <div />
             <Field label="Nom" required>

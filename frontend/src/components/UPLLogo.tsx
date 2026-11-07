@@ -20,11 +20,14 @@ const SIZES: Record<UPLLogoSize, string> = {
 
 export function UPLLogo({
   size = 'md',
+  heightClass,
   className = '',
   decorative = false,
   priority = false,
 }: {
   size?: UPLLogoSize;
+  /** Hauteurs sur mesure (classes Tailwind, ex. « h-16 sm:h-20 ») à la place des tailles prédéfinies. */
+  heightClass?: string;
   className?: string;
   /** true si le nom de l'université est déjà écrit à côté : le logo est alors ignoré par les lecteurs d'écran. */
   decorative?: boolean;
@@ -42,7 +45,7 @@ export function UPLLogo({
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : 'auto'}
       draggable={false}
-      className={`${SIZES[size]} w-auto shrink-0 select-none object-contain ${className}`}
+      className={`${heightClass ?? SIZES[size]} w-auto shrink-0 select-none object-contain ${className}`}
     />
   );
 }

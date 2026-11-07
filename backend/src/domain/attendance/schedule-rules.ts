@@ -163,6 +163,52 @@ export function sessionBounds(
   };
 }
 
+/* ------------------------------------------------------------------ Formulation des refus
+ * Un refus doit dire à l'agent pourquoi et quand pointer : jour de la semaine, jours de pointage,
+ * prochaine session (date et heure). Les règles elles-mêmes ne changent pas.
+ */
+export const WEEKDAY_NAMES = ['', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const;
+const MONTH_NAMES = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+/** « du lundi au vendredi », « le samedi », « lundi, mercredi et vendredi », « tous les jours ». */
+export function formatWeekdays(days: readonly number[]): string {
+  const sorted = [...new Set(days)].filter((d) => d >= 1 && d <= 7).sort((a, b) => a - b);
+  if (sorted.length === 0) return 'aucun jour';
+  if (sorted.length === 7) return 'tous les jours';
+  if (sorted.length === 1) return `le ${WEEKDAY_NAMES[sorted[0]]}`;
+  const consecutive = sorted.every((d, i) => i === 0 || d === sorted[i - 1] + 1);
+  if (consecutive && sorted.length >= 3) return `du ${WEEKDAY_NAMES[sorted[0]]} au ${WEEKDAY_NAMES[sorted[sorted.length - 1]]}`;
+  const names = sorted.map((d) => WEEKDAY_NAMES[d]);
+  return `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}`;
+}
+
+/** « lundi 9 novembre » (date locale AAAA-MM-JJ, jour ISO fourni). */
+export function formatLongDate(localDate: string, isoWeekday: number): string {
+  const [, month, day] = localDate.split('-').map(Number);
+  return `${WEEKDAY_NAMES[isoWeekday]} ${day} ${MONTH_NAMES[month - 1]}`;
+}
+
+export interface NextOpening {
+  date: string;
+  isoWeekday: number;
+  sessionType: SessionType;
+  opensAtMinute: number;
+  closesAtMinute: number;
+}
+
+/** « Prochaine session : lundi 9 novembre à 07h45 (matin). » ; null → aucune session programmée. */
+export function describeNextOpening(next: NextOpening | null, today: string, tomorrow: string): string {
+  if (!next) return 'Aucune session programmée dans les trois prochaines semaines.';
+  const when =
+    next.date === today
+      ? "aujourd'hui"
+      : next.date === tomorrow
+        ? `demain (${formatLongDate(next.date, next.isoWeekday)})`
+        : formatLongDate(next.date, next.isoWeekday);
+  const label = next.sessionType === 'MORNING' ? 'matin' : 'soir';
+  return `Prochaine session : ${when} à ${formatMinuteOfDay(next.opensAtMinute)} (${label}, jusqu'à ${formatMinuteOfDay(next.closesAtMinute)}).`;
+}
+
 /** Message affiché à l'agent pour une décision horaire refusée. */
 export function describeRefusal(decision: Exclude<ScanTimeDecision, { outcome: 'OPEN' }>): string {
   const label = (t: SessionType) => (t === 'MORNING' ? 'du matin' : 'du soir');

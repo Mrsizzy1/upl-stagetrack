@@ -157,6 +157,15 @@ export function ScanPage() {
             {l?.openSession ? <Badge tone="success">{SESSION_LABELS[l.openSession]} : ouverte</Badge> : <Badge tone="neutral">Aucune session ouverte</Badge>}
           </p>
           <p className="mt-1 text-sm text-upl-blue-800">{l?.status}</p>
+          {l && l.schedule.length > 0 && (
+            <ul className="mt-2 space-y-0.5 border-t border-upl-blue-100 pt-2 text-xs text-upl-blue-800">
+              {l.schedule.map((s) => (
+                <li key={s.sessionType}>
+                  <span className="font-semibold">{SESSION_LABELS[s.sessionType]}</span> : {s.opensAt}–{s.closesAt}, {s.days}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-upl-blue-100">
           <p className="text-xs uppercase tracking-wide text-upl-blue-800">Pointages enregistrés aujourd'hui</p>

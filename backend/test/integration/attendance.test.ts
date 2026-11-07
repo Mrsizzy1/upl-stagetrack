@@ -308,4 +308,105 @@ describe('Pointage de bout en bout', () => {
     await api().get('/api/students').expect(401);
     await api().get('/api/users').set('Authorization', `Bearer ${tokens.agent}`).expect(403);
   });
+
+  it("refus hors jours de pointage : raison et prochaine session indiquées, rien n'est enregistré", async () => {
+    clock.set(new Date('2026-11-14T13:13:00+02:00')); // samedi
+    const res = await scan(qr.s1).expect(200);
+    assert.equal(res.body.result, 'NO_SESSION');
+    assert.equal(res.body.accepted, false);
+    assert.match(res.body.message, /Pas de pointage le samedi/);
+    assert.match(res.body.message, /du lundi au vendredi/);
+    assert.match(res.body.message, /lundi 16 novembre à 07h45/);
+    assert.equal(await prisma.attendance.count({ where: { studentId: studentIds.s1, date: new Date('2026-11-14T00:00:00Z') } }), 0);
+    assert.equal(
+      await prisma.scanAttempt.count({ where: { studentId: studentIds.s1, result: 'NO_SESSION', scannedAt: new Date('2026-11-14T11:13:00Z') } }),
+      1,
+      'la tentative refusée reste journalisée',
+    );
+
+    const live = await api().get('/api/attendance/live').set('Authorization', `Bearer ${tokens.agent}`).expect(200);
+    assert.equal(live.body.openSession, null);
+    assert.deepEqual(live.body.nextSession, { date: '2026-11-16', sessionType: 'MORNING', opensAt: '07:45', closesAt: '08:45' });
+    assert.equal(live.body.schedule.length, 2);
+    assert.equal(live.body.schedule[0].days, 'du lundi au vendredi');
+  });
+
+  it('après la dernière session du jour : la prochaine session est annoncée (jour non travaillé compris)', async () => {
+    clock.set(new Date('2026-11-10T17:31:00+02:00')); // mardi, après 17h30
+    let res = await scan(qr.s1).expect(200);
+    assert.equal(res.body.result, 'SESSION_CLOSED');
+    assert.match(res.body.message, /demain \(mercredi 11 novembre\) à 07h45/);
+
+    await api()
+      .post('/api/schedules/non-working-days')
+      .set('Authorization', `Bearer ${tokens.admin}`)
+      .send({ date: '2026-11-11', label: 'Journée pédagogique' })
+      .expect(201);
+    res = await scan(qr.s1).expect(200);
+    assert.match(res.body.message, /jeudi 12 novembre à 07h45/);
+
+    clock.set(new Date('2026-11-11T08:00:00+02:00'));
+    res = await scan(qr.s1).expect(200);
+    assert.equal(res.body.result, 'NO_SESSION');
+    assert.match(res.body.message, /Jour non travaillé : Journée pédagogique/);
+
+    clock.set(new Date('2026-11-13T18:00:00+02:00')); // vendredi soir
+    res = await scan(qr.s1).expect(200);
+    assert.match(res.body.message, /lundi 16 novembre à 07h45/);
+  });
+
+  it("suppression d'un étudiant : refusée s'il a des pointages, motif obligatoire, journalisée sinon", async () => {
+    // s1 a des pointages : l'historique officiel est protégé.
+    const refused = await api()
+      .delete(`/api/students/${studentIds.s1}`)
+      .set('Authorization', `Bearer ${tokens.admin}`)
+      .send({ reason: 'Doublon supposé' })
+      .expect(409);
+    assert.equal(refused.body.code, 'STUDENT_HAS_ATTENDANCE');
+    // Réservé à l'administrateur, motif obligatoire.
+    await api().delete(`/api/students/${studentIds.suspendu}`).set('Authorization', `Bearer ${tokens.resp}`).send({ reason: 'Erreur de saisie' }).expect(403);
+    await api().delete(`/api/students/${studentIds.suspendu}`).set('Authorization', `Bearer ${tokens.admin}`).send({}).expect(400);
+
+    // « suspendu » n'a aucun pointage (jamais attendu) mais des tentatives de scan refusées.
+    const attemptsBefore = await prisma.scanAttempt.count({ where: { studentId: studentIds.suspendu } });
+    assert.ok(attemptsBefore > 0);
+    await api()
+      .delete(`/api/students/${studentIds.suspendu}`)
+      .set('Authorization', `Bearer ${tokens.admin}`)
+      .send({ reason: 'Étudiant enregistré par erreur' })
+      .expect(204);
+    assert.equal(await prisma.student.count({ where: { id: studentIds.suspendu } }), 0);
+    assert.equal(await prisma.qRCodeCredential.count({ where: { studentId: studentIds.suspendu } }), 0);
+    assert.equal(await prisma.internship.count({ where: { studentId: studentIds.suspendu } }), 0);
+    assert.equal(await prisma.scanAttempt.count({ where: { studentId: studentIds.suspendu } }), attemptsBefore, 'le journal des scans est conservé');
+    const audit = await prisma.auditLog.findFirstOrThrow({ where: { action: 'STUDENT_DELETED', entityId: studentIds.suspendu } });
+    assert.equal((audit.before as { matricule: string }).matricule, 'TEST-SUSPENDU');
+    assert.equal((audit.after as { reason: string }).reason, 'Étudiant enregistré par erreur');
+    // Son ancien QR Code n'est plus reconnu.
+    clock.set(new Date('2026-11-16T07:50:00+02:00'));
+    assert.equal((await scan(qr.suspendu).expect(200)).body.result, 'INVALID_QR');
+    await api().get(`/api/students/${studentIds.suspendu}`).set('Authorization', `Bearer ${tokens.admin}`).expect(404);
+  });
+
+  it("correction du matricule : unicité contrôlée, l'identifiant de connexion de l'étudiant suit", async () => {
+    const conflict = await api()
+      .patch(`/api/students/${studentIds.s3}`)
+      .set('Authorization', `Bearer ${tokens.admin}`)
+      .send({ matricule: 'test-s4' })
+      .expect(409);
+    assert.equal(conflict.body.code, 'MATRICULE_TAKEN');
+
+    const res = await api()
+      .patch(`/api/students/${studentIds.s1}`)
+      .set('Authorization', `Bearer ${tokens.admin}`)
+      .send({ matricule: ' test-s1-corrige ' })
+      .expect(200);
+    assert.equal(res.body.matricule, 'TEST-S1-CORRIGE');
+    assert.equal(res.body.account.username, 'test-s1-corrige');
+    await api().post('/api/auth/login').send({ username: 'TEST-s1', password: PASSWORD }).expect(401);
+    await api().post('/api/auth/login').send({ username: 'TEST-S1-CORRIGE', password: PASSWORD }).expect(200);
+    // Les pointages restent rattachés à l'étudiant et son QR Code fonctionne toujours.
+    assert.ok((await prisma.attendance.count({ where: { studentId: studentIds.s1 } })) > 0);
+    assert.notEqual((await scan(qr.s1).expect(200)).body.result, 'INVALID_QR');
+  });
 });

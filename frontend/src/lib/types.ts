@@ -128,6 +128,10 @@ export interface LiveStatus {
   openSession: SessionType | null;
   status: string;
   sessions: { sessionType: SessionType; opensAt: string; closesAt: string; recorded: number }[];
+  /** Horaires en vigueur, avec leurs jours (« du lundi au vendredi »). */
+  schedule: { sessionType: SessionType; opensAt: string; closesAt: string; days: string }[];
+  /** Prochaine ouverture quand aucune session n'est ouverte. */
+  nextSession: { date: string; sessionType: SessionType; opensAt: string; closesAt: string } | null;
 }
 
 export interface UserView {

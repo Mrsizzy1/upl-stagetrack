@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { AuditService } from '../common/audit/audit.service';
 import type { AuthUser } from '../common/auth/auth.decorators';
 import { Clock } from '../common/clock/clock';
+import { normalizeUsername } from '../common/security/password-policy';
 import { fromDbDate, toDbDate } from '../common/dates';
 import { paginate, Paginated } from '../common/http/pagination.dto';
 import { toLocal } from '../domain/time/zoned-time';
@@ -166,24 +167,88 @@ export class StudentsService {
       dto.departmentId ?? before.departmentId,
       dto.promotionId ?? before.promotionId,
     );
-    await this.prisma.$transaction(async (tx) => {
-      const after = await tx.student.update({
-        where: { id },
-        data: {
-          lastName: dto.lastName,
-          middleName: dto.middleName,
-          firstName: dto.firstName,
-          facultyId: dto.facultyId,
-          departmentId: dto.departmentId,
-          promotionId: dto.promotionId,
-          email: dto.email,
-          phone: dto.phone,
-          enrolledAt: dto.enrolledAt ? toDbDate(dto.enrolledAt) : undefined,
-        },
+    // Correction du matricule : les pointages sont liés à l'identifiant interne, pas au matricule ;
+    // le QR Code ne contient pas le matricule. L'identifiant de connexion de l'étudiant suit.
+    const matricule = dto.matricule && dto.matricule !== before.matricule ? dto.matricule : undefined;
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const after = await tx.student.update({
+          where: { id },
+          data: {
+            matricule,
+            lastName: dto.lastName,
+            middleName: dto.middleName,
+            firstName: dto.firstName,
+            facultyId: dto.facultyId,
+            departmentId: dto.departmentId,
+            promotionId: dto.promotionId,
+            email: dto.email,
+            phone: dto.phone,
+            enrolledAt: dto.enrolledAt ? toDbDate(dto.enrolledAt) : undefined,
+          },
+        });
+        if (matricule && before.userId) {
+          await tx.user.update({ where: { id: before.userId }, data: { username: normalizeUsername(matricule) } });
+        }
+        await this.audit.log({ actorId: actor.id, action: 'STUDENT_UPDATED', entityType: 'Student', entityId: id, before, after, ip }, tx);
       });
-      await this.audit.log({ actorId: actor.id, action: 'STUDENT_UPDATED', entityType: 'Student', entityId: id, before, after, ip }, tx);
-    });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException({ code: 'MATRICULE_TAKEN', message: 'Ce matricule est déjà utilisé par un autre étudiant ou un autre compte' });
+      }
+      throw e;
+    }
     return this.get(id);
+  }
+
+  /**
+   * Suppression définitive d'un étudiant enregistré par erreur (doublon, mauvaise saisie).
+   * Refusée dès qu'un pointage existe (présent, retard ou absent) : l'historique officiel est conservé ;
+   * il faut alors passer l'étudiant en « Stage terminé » ou « Suspendu ».
+   * Sont supprimés avec lui : ses périodes de stage, ses QR Codes, son compte de connexion et sa photo.
+   * Le journal des tentatives de scan et le journal d'audit sont conservés (ajout seul).
+   */
+  async remove(id: string, reason: string, actor: AuthUser, ip: string | null): Promise<void> {
+    const student = await this.prisma.student.findUnique({
+      where: { id },
+      include: { internships: true, user: { select: { id: true, username: true } }, _count: { select: { attendances: true, credentials: true } } },
+    });
+    if (!student) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Étudiant introuvable' });
+    if (student._count.attendances > 0) {
+      throw new ConflictException({
+        code: 'STUDENT_HAS_ATTENDANCE',
+        message: `Suppression impossible : ${student._count.attendances} pointage(s) sont enregistrés pour cet étudiant et font partie de l'historique officiel. Utilisez « Changer le statut » (Stage terminé ou Suspendu).`,
+      });
+    }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.qRCodeCredential.deleteMany({ where: { studentId: id } });
+      await tx.internship.deleteMany({ where: { studentId: id } });
+      await tx.student.delete({ where: { id } });
+      if (student.user) await tx.user.delete({ where: { id: student.user.id } }); // sessions supprimées en cascade
+      await this.audit.log(
+        {
+          actorId: actor.id,
+          action: 'STUDENT_DELETED',
+          entityType: 'Student',
+          entityId: id,
+          before: {
+            matricule: student.matricule,
+            nom: `${student.lastName} ${student.middleName} ${student.firstName}`,
+            facultyId: student.facultyId,
+            departmentId: student.departmentId,
+            promotionId: student.promotionId,
+            status: student.status,
+            stages: student.internships.map((i) => ({ debut: fromDbDate(i.startDate), fin: fromDbDate(i.endDate), service: i.hostService })),
+            qrCodes: student._count.credentials,
+            compte: student.user?.username ?? null,
+          },
+          after: { reason },
+          ip,
+        },
+        tx,
+      );
+    });
+    if (student.photoPath) await this.photos.remove(student.photoPath);
   }
 
   /** Suspension, fin de stage ou réactivation. Une suspension prend effet au scan suivant. */

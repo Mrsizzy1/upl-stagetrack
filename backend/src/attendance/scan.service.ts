@@ -13,7 +13,7 @@ import { Clock } from '../common/clock/clock';
 import { toDbDate } from '../common/dates';
 import type { RequestMeta } from '../common/http/request-meta';
 import { SCAN_MESSAGES, ScanResultCode } from '../domain/attendance/scan-result';
-import { describeRefusal, evaluateScanTime } from '../domain/attendance/schedule-rules';
+import { evaluateScanTime, formatWeekdays } from '../domain/attendance/schedule-rules';
 import { toLocal } from '../domain/time/zoned-time';
 import { PrismaService } from '../prisma/prisma.service';
 import { QrService, ScanStudent } from '../qr/qr.service';
@@ -105,11 +105,12 @@ export class ScanService {
 
     const plan = await this.schedules.dayPlan(localDate);
     if (plan.nonWorkingDay) {
-      return { ...base, result: 'NO_SESSION', message: `Jour non travaillé : ${plan.nonWorkingDay}.` };
+      return { ...base, result: 'NO_SESSION', message: await this.schedules.explainRefusal(now, plan, null) };
     }
     const decision = evaluateScanTime(now, this.schedules.timeZone, plan.windows);
     if (decision.outcome !== 'OPEN') {
-      return { ...base, result: decision.outcome, message: describeRefusal(decision) };
+      // Refus horaire : le message précise la raison et la prochaine session (rien n'est enregistré).
+      return { ...base, result: decision.outcome, message: await this.schedules.explainRefusal(now, plan, decision) };
     }
 
     const window = plan.windows.find((w) => w.sessionType === decision.sessionType)!;
@@ -238,24 +239,29 @@ export class ScanService {
       _count: { _all: true },
     });
     const todays = plan.windows.filter((w) => w.activeWeekdays.includes(local.isoWeekday));
+    const hhmm = (minute: number) => `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`;
+    const openSession = decision?.outcome === 'OPEN' ? decision.sessionType : null;
+    const next = openSession ? null : await this.schedules.nextOpening(now);
+    const status = openSession
+      ? `Session du ${openSession === 'MORNING' ? 'matin' : 'soir'} ouverte`
+      : await this.schedules.explainRefusal(now, plan, decision && decision.outcome !== 'OPEN' ? decision : null);
     return {
       serverTime: now.toISOString(),
       timeZone: this.schedules.timeZone,
       localDate: local.date,
       localTime: `${String(local.hour).padStart(2, '0')}:${String(local.minute).padStart(2, '0')}:${String(local.second).padStart(2, '0')}`,
       nonWorkingDay: plan.nonWorkingDay,
-      openSession: decision?.outcome === 'OPEN' ? decision.sessionType : null,
-      status: !decision
-        ? `Jour non travaillé : ${plan.nonWorkingDay}`
-        : decision.outcome === 'OPEN'
-          ? `Session du ${decision.sessionType === 'MORNING' ? 'matin' : 'soir'} ouverte`
-          : describeRefusal(decision),
+      openSession,
+      status,
       sessions: todays.map((w) => ({
         sessionType: w.sessionType,
-        opensAt: `${String(Math.floor(w.opensAtMinute / 60)).padStart(2, '0')}:${String(w.opensAtMinute % 60).padStart(2, '0')}`,
-        closesAt: `${String(Math.floor(w.closesAtMinute / 60)).padStart(2, '0')}:${String(w.closesAtMinute % 60).padStart(2, '0')}`,
+        opensAt: hhmm(w.opensAtMinute),
+        closesAt: hhmm(w.closesAtMinute),
         recorded: counts.find((c) => c.sessionType === w.sessionType)?._count._all ?? 0,
       })),
+      // Horaires en vigueur (tous jours confondus) et prochaine ouverture : l'agent sait quand pointer.
+      schedule: plan.windows.map((w) => ({ sessionType: w.sessionType, opensAt: hhmm(w.opensAtMinute), closesAt: hhmm(w.closesAtMinute), days: formatWeekdays(w.activeWeekdays) })),
+      nextSession: next ? { date: next.date, sessionType: next.sessionType, opensAt: hhmm(next.opensAtMinute), closesAt: hhmm(next.closesAtMinute) } : null,
     };
   }
 }

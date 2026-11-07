@@ -24,6 +24,22 @@ const STATUS_CODES: Record<number, string> = {
   429: 'TOO_MANY_REQUESTS',
 };
 
+/** Codes Prisma de connexion : serveur injoignable, délai dépassé, connexion fermée, pool saturé. */
+const CONNECTION_CODES = new Set(['P1001', 'P1002', 'P1008', 'P1017', 'P2024']);
+
+const CONNECTION_MESSAGE = /can't reach database|connection (refused|closed|reset)|server closed the connection/i;
+
+export function isDatabaseUnavailable(exception: unknown): boolean {
+  if (exception instanceof Prisma.PrismaClientInitializationError) return true;
+  if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    return CONNECTION_CODES.has(exception.code) || CONNECTION_MESSAGE.test(exception.message);
+  }
+  if (exception instanceof Prisma.PrismaClientUnknownRequestError || exception instanceof Prisma.PrismaClientRustPanicError) {
+    return CONNECTION_MESSAGE.test(exception.message);
+  }
+  return false;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger('Erreurs');
@@ -61,6 +77,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
         };
       }
       return { statusCode: status, code: STATUS_CODES[status] ?? 'ERROR', message: String(payload) };
+    }
+
+    // Base de données arrêtée ou injoignable : l'agent doit savoir que rien n'a été enregistré.
+    if (isDatabaseUnavailable(exception)) {
+      return {
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        code: 'DATABASE_UNAVAILABLE',
+        message: "Base de données injoignable : aucune donnée n'a été enregistrée. Réessayez dans un instant ou prévenez l'administrateur.",
+      };
     }
 
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {

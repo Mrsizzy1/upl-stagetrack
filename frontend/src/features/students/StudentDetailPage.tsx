@@ -57,7 +57,7 @@ export function StudentDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ['students'] });
   };
 
-  const [modal, setModal] = useState<null | 'status' | 'regenerate' | 'revoke' | 'account' | 'internship'>(null);
+  const [modal, setModal] = useState<null | 'status' | 'regenerate' | 'revoke' | 'account' | 'internship' | 'delete'>(null);
   const [editingInternship, setEditingInternship] = useState<Internship | null>(null);
   const [correcting, setCorrecting] = useState<AttendanceRow | null>(null);
   const [qrVersion, setQrVersion] = useState(0);
@@ -81,6 +81,9 @@ export function StudentDetailPage() {
               </Button>
               <Button variant="secondary" onClick={() => setModal('status')}>
                 Changer le statut
+              </Button>
+              <Button variant="danger" onClick={() => setModal('delete')}>
+                Supprimer
               </Button>
             </>
           )
@@ -298,6 +301,20 @@ export function StudentDetailPage() {
         onClose={() => setModal(null)}
         submit={(reason) => api.post(`/students/${id}/qr/revoke`, { reason })}
         onDone={() => { refresh(); setQrVersion((v) => v + 1); }}
+      />
+      <ReasonModal
+        open={modal === 'delete'}
+        title="Supprimer l'étudiant"
+        warning={`Suppression définitive de ${fullName(s)} (${s.matricule}) : fiche, périodes de stage, QR Code et compte de connexion. Réservée aux enregistrements faits par erreur : si des présences existent déjà, la suppression est refusée (utilisez alors « Changer le statut »).`}
+        confirm="Supprimer définitivement"
+        danger
+        onClose={() => setModal(null)}
+        submit={(reason) => api.del(`/students/${id}`, { reason })}
+        onDone={() => {
+          void queryClient.invalidateQueries({ queryKey: ['students'] });
+          queryClient.removeQueries({ queryKey: ['student', id] });
+          navigate('/etudiants', { replace: true });
+        }}
       />
       <AccountModal open={modal === 'account'} studentId={id} matricule={s.matricule} onClose={() => setModal(null)} onDone={refresh} />
       <InternshipModal

@@ -9,8 +9,17 @@ import { Prisma, SessionType } from '@prisma/client';
 import { AuditService } from '../common/audit/audit.service';
 import type { AuthUser } from '../common/auth/auth.decorators';
 import { Clock } from '../common/clock/clock';
-import { fromDbDate, toDbDate } from '../common/dates';
-import { SessionWindow, validateWindows } from '../domain/attendance/schedule-rules';
+import { addDays, fromDbDate, isoWeekdayOf, toDbDate } from '../common/dates';
+import {
+  describeNextOpening,
+  describeRefusal,
+  formatWeekdays,
+  NextOpening,
+  ScanTimeDecision,
+  SessionWindow,
+  validateWindows,
+  WEEKDAY_NAMES,
+} from '../domain/attendance/schedule-rules';
 import { formatMinuteOfDay, toLocal } from '../domain/time/zoned-time';
 import { PrismaService } from '../prisma/prisma.service';
 import { NonWorkingDayDto, UpdateSchedulesDto } from './attendance.dto';
@@ -82,6 +91,44 @@ export class SchedulesService {
           activeWeekdays: s.activeWeekdays,
         })),
     };
+  }
+
+  /**
+   * Prochaine ouverture de session strictement après `now` (heure serveur), en tenant compte des
+   * versions d'horaires, des jours actifs et des jours non travaillés. Recherche sur 21 jours.
+   */
+  async nextOpening(now: Date): Promise<NextOpening | null> {
+    const local = toLocal(now, this.timeZone);
+    for (let offset = 0; offset <= 21; offset++) {
+      const date = addDays(local.date, offset);
+      const plan = await this.dayPlan(date);
+      if (plan.nonWorkingDay) continue;
+      const weekday = isoWeekdayOf(date);
+      const next = plan.windows
+        .filter((w) => w.activeWeekdays.includes(weekday) && (offset > 0 || w.opensAtMinute > local.minuteOfDay))
+        .sort((a, b) => a.opensAtMinute - b.opensAtMinute)[0];
+      if (next) {
+        return { date, isoWeekday: weekday, sessionType: next.sessionType, opensAtMinute: next.opensAtMinute, closesAtMinute: next.closesAtMinute };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Explication complète d'un refus horaire : raison du jour (week-end, jour non travaillé, session fermée)
+   * et date/heure de la prochaine session. Utilisée par le scan et par l'écran de pointage.
+   */
+  async explainRefusal(now: Date, plan: DayPlan, decision: Exclude<ScanTimeDecision, { outcome: 'OPEN' }> | null): Promise<string> {
+    const local = toLocal(now, this.timeZone);
+    const next = describeNextOpening(await this.nextOpening(now), local.date, addDays(local.date, 1));
+    if (plan.nonWorkingDay) return `Jour non travaillé : ${plan.nonWorkingDay}. ${next}`;
+    if (!decision) return next;
+    if (decision.outcome === 'NO_SESSION') {
+      const days = plan.windows.flatMap((w) => [...w.activeWeekdays]);
+      return `Pas de pointage le ${WEEKDAY_NAMES[local.isoWeekday]} : les sessions ont lieu ${formatWeekdays(days)}. ${next}`;
+    }
+    if (decision.outcome === 'SESSION_CLOSED' && !decision.nextSessionType) return `${describeRefusal(decision)} ${next}`;
+    return describeRefusal(decision);
   }
 
   /** Horaires actuels et versions programmées, au format lisible HH:MM. */

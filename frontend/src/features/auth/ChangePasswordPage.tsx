@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { AuthBrand, AuthFrame } from '../../components/AuthLayout';
+import { AUTH_FORM, AUTH_INPUT, AuthBrand, AuthFrame } from '../../components/AuthLayout';
 import { Alert, Button, ErrorAlert, Field, Input, Loading } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -39,23 +39,23 @@ export function ChangePasswordPage() {
   return (
     <AuthFrame>
       <AuthBrand />
-      <form onSubmit={submit} className="mt-8 space-y-4">
-        <h1 className="text-lg font-semibold text-upl-blue-900">Changer le mot de passe</h1>
+      <form onSubmit={submit} className={AUTH_FORM}>
+        <h1 className="text-base font-semibold text-upl-blue-900">Changer le mot de passe</h1>
         {state.user.mustChangePassword && (
           <Alert tone="warning">Votre mot de passe est provisoire : choisissez-en un nouveau pour continuer.</Alert>
         )}
         <ErrorAlert error={error} />
         <Field label="Mot de passe actuel" required>
-          {(id) => <Input id={id} type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />}
+          {(id) => <Input id={id} className={AUTH_INPUT} type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />}
         </Field>
         <Field label="Nouveau mot de passe" hint="10 caractères minimum, au moins une lettre et un chiffre" required>
-          {(id) => <Input id={id} type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required minLength={10} />}
+          {(id) => <Input id={id} className={AUTH_INPUT} type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required minLength={10} />}
         </Field>
         <Field label="Confirmer le nouveau mot de passe" error={mismatch ? 'Les deux mots de passe diffèrent' : null} required>
-          {(id) => <Input id={id} type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />}
+          {(id) => <Input id={id} className={AUTH_INPUT} type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />}
         </Field>
         <div className="flex gap-2">
-          <Button type="submit" loading={pending}>
+          <Button type="submit" loading={pending} className="py-2">
             Enregistrer
           </Button>
           <Button variant="ghost" onClick={() => void logout()}>
