@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthUser, CurrentUser, Public, Roles } from '../common/auth/auth.decorators';
+import { MAX_ITEM_PHOTO_BYTES } from './item-storage.service';
 import {
   ClaimItemDto,
   ConfirmReturnDto,
@@ -55,7 +56,7 @@ export class ItemsController {
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('public/declare')
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
+  @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: MAX_ITEM_PHOTO_BYTES, files: 1 } }))
   declarePublic(
     @Body() dto: DeclareItemDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -67,7 +68,7 @@ export class ItemsController {
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('public/:id/claim')
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
+  @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: MAX_ITEM_PHOTO_BYTES, files: 1 } }))
   claimPublic(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ClaimItemDto,

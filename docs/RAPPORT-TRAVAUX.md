@@ -10,7 +10,7 @@ et les vérifications effectuées. Il ne contient aucun mot de passe ni secret :
 | --- | --- |
 | Dépendances (`npm install`) | Installées (monorepo `backend` + `frontend`) |
 | Base de données | PostgreSQL 16 dédié, port 5434 (Docker absent de la machine de développement) |
-| Migrations Prisma | 3 migrations appliquées sans erreur |
+| Migrations Prisma | 4 migrations appliquées sans erreur |
 | Données initiales (`prisma db seed`) | 4 rôles, horaires officiels, compte administrateur à mot de passe provisoire |
 | API | `http://localhost:3000/api` — documentation `http://localhost:3000/api/docs` |
 | Interface | `http://localhost:5174` (le port 5173 était occupé sur la machine) |

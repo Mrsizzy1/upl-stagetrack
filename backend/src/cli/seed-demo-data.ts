@@ -1,13 +1,14 @@
 import { PrismaClient, MachineStatus, ComponentState, InterventionPriority, InterventionStatus, ItemType, ItemCategory, ItemStatus, StudentStatus } from '@prisma/client';
-import * as argon2 from 'argon2';
 import { randomBytes, createHash } from 'node:crypto';
-import { ARGON2_OPTIONS } from '../common/security/password-hashing';
 import { generateToken, hashToken, sealToken } from '../domain/qr/qr-token';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Début du peuplement des données institutionnelles réelles de l\'UPL ---');
+  if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEMO_SEED !== 'true') {
+    throw new Error('Ce jeu de données fictives est réservé au développement. Définissez ALLOW_DEMO_SEED=true hors production pour continuer.');
+  }
+  console.log('--- Début du peuplement des données fictives de démonstration ---');
 
   const qrKeyBase64 = process.env.QR_TOKEN_ENCRYPTION_KEY;
   if (!qrKeyBase64) throw new Error('QR_TOKEN_ENCRYPTION_KEY manquant dans .env');
@@ -67,58 +68,6 @@ async function main() {
   console.log('✓ Promotions LMD créées');
 
   // 3. COMPTES UTILISATEURS DU PERSONNEL
-  const roles = await prisma.role.findMany();
-  const roleMap = Object.fromEntries(roles.map((r) => [r.code, r.id]));
-
-  const staffUsers = [
-    {
-      username: 'technicien',
-      fullName: 'KAPEND TSHIKOMB Jean-Luc',
-      email: 'jl.kapend@upl-univ.ac',
-      roleId: roleMap['IT_TECHNICIAN'],
-      password: 'UplTech2026!',
-    },
-    {
-      username: 'agent',
-      fullName: 'MWAMBA MUKENGESHAYI David',
-      email: 'd.mwamba@upl-univ.ac',
-      roleId: roleMap['SCAN_AGENT'],
-      password: 'UplAgent2026!',
-    },
-    {
-      username: 'responsable',
-      fullName: 'Prof. Dr. TSHIMANGA KABEYA Michel',
-      email: 'm.tshimanga@upl-univ.ac',
-      roleId: roleMap['INTERNSHIP_MANAGER'],
-      password: 'UplResp2026!',
-    },
-  ];
-
-  for (const u of staffUsers) {
-    const hash = await argon2.hash(u.password, ARGON2_OPTIONS);
-    await prisma.user.upsert({
-      where: { username: u.username },
-      update: {
-        fullName: u.fullName,
-        email: u.email,
-        roleId: u.roleId,
-        passwordHash: hash,
-        mustChangePassword: false,
-        isActive: true,
-      },
-      create: {
-        username: u.username,
-        fullName: u.fullName,
-        email: u.email,
-        roleId: u.roleId,
-        passwordHash: hash,
-        mustChangePassword: false,
-        isActive: true,
-      },
-    });
-  }
-  console.log('✓ Comptes du personnel UPL opérationnels (technicien, agent, responsable)');
-
   // 4. PARC INFORMATIQUE (LABORATOIRES ET MACHINES)
   const labGL = await prisma.laboratory.upsert({
     where: { code: 'LAB-GL' },
@@ -224,12 +173,11 @@ async function main() {
     }
   }
 
-  // Incident réel ouvert sur la machine L1-A04
+  // Incident fictif ouvert sur la machine L1-A04
   const defectiveMachine = await prisma.machine.findUnique({ where: { code: 'L1-A04' } });
   if (defectiveMachine) {
     const existingInterv = await prisma.technicalIntervention.findFirst({ where: { machineId: defectiveMachine.id } });
     if (!existingInterv) {
-      const techUser = await prisma.user.findUnique({ where: { username: 'technicien' } });
       await prisma.technicalIntervention.create({
         data: {
           machineId: defectiveMachine.id,
@@ -237,7 +185,6 @@ async function main() {
           description: 'L\'affichage se coupe subitement au bout de quelques minutes de session TP. Câble HDMI ou bloc alimentation écran à remplacer.',
           priority: InterventionPriority.HIGH,
           status: InterventionStatus.IN_PROGRESS,
-          technicianId: techUser?.id,
         },
       });
     }
@@ -245,7 +192,7 @@ async function main() {
 
   console.log('✓ Laboratoire Génie Logiciel (12 machines, rangées, composants et intervention) initialisé');
 
-  // 5. ÉTUDIANTS STAGIAIRES RÉELS DE L'UPL
+  // 5. ÉTUDIANTS FICTIFS POUR LA DÉMONSTRATION
   const studentsData = [
     {
       matricule: '22-FSI-0142',
@@ -316,28 +263,9 @@ async function main() {
   ];
 
   const adminUser = await prisma.user.findUniqueOrThrow({ where: { username: 'admin' } });
-  const studentRole = roleMap['STUDENT'];
-
   for (const st of studentsData) {
     let student = await prisma.student.findUnique({ where: { matricule: st.matricule } });
     if (!student) {
-      // Création du compte utilisateur étudiant pour Patrick Kabange
-      let userId: string | undefined;
-      if (st.matricule === '22-FSI-0142') {
-        const studentPwHash = await argon2.hash('UplEtudiant2026!', ARGON2_OPTIONS);
-        const u = await prisma.user.create({
-          data: {
-            username: st.matricule.toLowerCase(),
-            fullName: `${st.lastName} ${st.middleName} ${st.firstName}`,
-            email: st.email,
-            roleId: studentRole,
-            passwordHash: studentPwHash,
-            mustChangePassword: false,
-          },
-        });
-        userId = u.id;
-      }
-
       student = await prisma.student.create({
         data: {
           matricule: st.matricule,
@@ -351,7 +279,6 @@ async function main() {
           phone: st.phone,
           enrolledAt: new Date('2025-10-15'),
           status: StudentStatus.ACTIVE,
-          userId,
         },
       });
 
@@ -427,7 +354,7 @@ async function main() {
       },
     });
 
-    console.log('✓ Objets perdus et trouvés réels enregistrés et publiés');
+    console.log('✓ Objets perdus et trouvés fictifs enregistrés et publiés');
   }
 
   // Mise à jour des dates de stage pour couvrir l'année académique active
@@ -438,7 +365,7 @@ async function main() {
     },
   });
 
-  // Session de présence et pointages réels du jour pour démonstration opérationnelle
+  // Session de présence et pointages fictifs du jour pour démonstration opérationnelle
   const scheduleMorning = await prisma.attendanceSchedule.findFirst({ where: { sessionType: 'MORNING' } });
   if (scheduleMorning) {
     const todayDate = new Date('2026-11-10T00:00:00Z');
@@ -461,8 +388,6 @@ async function main() {
     }
 
     const allStudents = await prisma.student.findMany({ take: 6 });
-    const agentUser = await prisma.user.findUnique({ where: { username: 'agent' } });
-
     // Enregistrement des présences du matin
     if (allStudents.length >= 4) {
       const attendancesCount = await prisma.attendance.count({ where: { sessionId: session.id } });
@@ -477,7 +402,6 @@ async function main() {
             status: 'PRESENT',
             method: 'QR',
             recordedAt: new Date('2026-11-10T05:50:12Z'),
-            recordedById: agentUser?.id,
           },
         });
 
@@ -491,7 +415,6 @@ async function main() {
             status: 'PRESENT',
             method: 'QR',
             recordedAt: new Date('2026-11-10T05:58:44Z'),
-            recordedById: agentUser?.id,
           },
         });
 
@@ -505,7 +428,6 @@ async function main() {
             status: 'LATE',
             method: 'QR',
             recordedAt: new Date('2026-11-10T06:22:05Z'),
-            recordedById: agentUser?.id,
           },
         });
 
@@ -519,7 +441,6 @@ async function main() {
             status: 'PRESENT',
             method: 'MANUAL',
             recordedAt: new Date('2026-11-10T06:05:18Z'),
-            recordedById: agentUser?.id,
             manualReason: 'Badge temporairement laissé au domicile, identité vérifiée sur carte étudiant',
           },
         });
@@ -528,7 +449,7 @@ async function main() {
   }
 
   console.log('✓ Session du jour et pointages d\'émargement créés');
-  console.log('--- Peuplement des données réelles achevé avec succès ---');
+  console.log('--- Peuplement des données fictives achevé avec succès ---');
 }
 
 main()

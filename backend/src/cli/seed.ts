@@ -1,6 +1,6 @@
 /**
  * Données initiales indispensables au démarrage :
- *  - les 4 rôles ;
+ *  - les rôles pris en charge par l'application ;
  *  - les horaires officiels (07h45–08h45, 17h00–17h30), en vigueur à partir d'aujourd'hui ;
  *  - un compte administrateur, mot de passe à changer à la première connexion.
  *

@@ -12,7 +12,7 @@ Monorepo : `backend/` (API NestJS, Prisma, PostgreSQL) et `frontend/` (React, Vi
 | Domaine | Contenu |
 | --- | --- |
 | Authentification | JWT 15 min + rafraîchissement rotatif en cookie httpOnly, Argon2id, blocage après 5 tentatives par adresse et verrouillage du compte après 20 échecs, mot de passe provisoire à changer |
-| Autorisation | Garde globale, refus par défaut, 4 rôles, compte relu en base à chaque requête |
+| Autorisation | Garde globale, refus par défaut, 9 rôles, compte relu en base à chaque requête |
 | Étudiants | Fiche complète, photo, statut, périodes de stage, recherche, filtres, import CSV/Excel avec simulation |
 | QR Codes | Jeton opaque 256 bits (aucune donnée personnelle), empreinte SHA-256 + copie chiffrée AES-256-GCM, PNG, carte PDF, régénération, révocation |
 | Pointage | Caméra (html5-qrcode), saisie manuelle avec motif, heure serveur seule, contrainte unique en base, journal de chaque tentative |
@@ -22,6 +22,9 @@ Monorepo : `backend/` (API NestJS, Prisma, PostgreSQL) et `frontend/` (React, Vi
 | Tableau de bord | Inscrits, présents matin/soir, absents, retards, taux, 14 jours, derniers pointages, filtres |
 | Rapports | Journalier, hebdomadaire, mensuel, période libre ; par étudiant, faculté, promotion, session, jour ; Excel et PDF |
 | Audit | Journal en ajout seul (déclencheurs PostgreSQL), consultation filtrée |
+| Portail institutionnel | Accueil par rôle, supervision et paramètres institutionnels |
+| Objets perdus et trouvés | Déclaration et réclamation publiques, modération et restitutions |
+| Parc informatique | Laboratoires, machines, signalements QR, contrôles et interventions |
 
 ## Prérequis
 
@@ -106,7 +109,7 @@ upl-stagetrack/
 ├── deploy/                       Dockerfiles, nginx.conf, sauvegarde, modèle d'environnement
 ├── docs/                         Déploiement, guide d'utilisation
 ├── backend/
-│   ├── prisma/                   schema.prisma, 3 migrations
+│   ├── prisma/                   schema.prisma, 4 migrations
 │   ├── scripts/                  remise à zéro de la base de test, tests SQL
 │   ├── src/
 │   │   ├── auth/                 connexion, rafraîchissement, mot de passe
@@ -123,5 +126,5 @@ upl-stagetrack/
 └── frontend/src/
     ├── lib/                      client API, session, formats, types
     ├── components/               mise en page, composants
-    └── features/                 auth, attendance, students, reports, admin, student, system
+    └── features/                 auth, attendance, students, reports, admin, student, items, labs, machines, supervision, system
 ```
