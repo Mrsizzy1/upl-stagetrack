@@ -4,6 +4,7 @@
   "private": true,
   "description": "API REST d'UPL StageTrack (NestJS, Prisma, PostgreSQL)",
   "scripts": {
+    "prebuild": "DATABASE_URL=${DATABASE_URL:-postgresql://build:build@localhost:5432/build} prisma generate",
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
