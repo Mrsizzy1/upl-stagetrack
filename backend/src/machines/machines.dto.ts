@@ -1,4 +1,4 @@
-import { ComponentState, InterventionPriority, InterventionStatus, MachineStatus } from '@prisma/client';
+import { ComponentState, InterventionPriority, InterventionStatus, MachineStatus } from '../generated/prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsArray,

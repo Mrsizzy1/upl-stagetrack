@@ -10,13 +10,14 @@
  * Le script est rejouable : il ne crée que ce qui manque.
  * Exécution : npm run prisma:seed (développement) ou node dist/cli/seed.js (production)
  */
-import { PrismaClient, RoleCode } from '@prisma/client';
+import { RoleCode } from '../generated/prisma/client';
+import { createPrismaClient } from '../prisma/create-prisma-client';
 import * as argon2 from 'argon2';
 import { INITIAL_WINDOWS, validateWindows } from '../domain/attendance/schedule-rules';
 import { assertValidTimeZone, toLocal } from '../domain/time/zoned-time';
 import { ARGON2_OPTIONS } from '../common/security/password-hashing';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const ROLES: { code: RoleCode; label: string }[] = [
   { code: 'ADMIN', label: 'Administrateur' },

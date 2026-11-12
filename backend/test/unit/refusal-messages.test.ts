@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../src/generated/prisma/client';
 import { describeNextOpening, formatLongDate, formatWeekdays } from '../../src/domain/attendance/schedule-rules';
 import { isDatabaseUnavailable } from '../../src/common/filters/all-exceptions.filter';
 

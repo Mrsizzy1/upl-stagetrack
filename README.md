@@ -77,15 +77,8 @@ la clôture, les corrections et les exports.
 
 Rapport détaillé des travaux (audit, corrections, vérifications) : [docs/RAPPORT-TRAVAUX.md](docs/RAPPORT-TRAVAUX.md).
 
-Commande pour confirmer que les migrations écrites à la main correspondent au schéma :
+La CI applique les migrations sur PostgreSQL 16 et execute les tests SQL et d'integration sur une base isolee. Prisma 7 charge sa configuration depuis `backend/prisma.config.ts`.
 
-```bash
-cd backend
-npx prisma migrate diff --from-migrations prisma/migrations \
-  --to-schema-datamodel prisma/schema.prisma \
-  --shadow-database-url "postgresql://stagetrack:stagetrack_dev@localhost:5432/stagetrack_shadow"
-# Attendu : « No difference detected » (créer la base stagetrack_shadow au préalable)
-```
 
 ## Décisions en attente de l'UPL
 

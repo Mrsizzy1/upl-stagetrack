@@ -1,6 +1,6 @@
 /** Consultation des présences, historique par étudiant et corrections exceptionnelles. */
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import { AuditService } from '../common/audit/audit.service';
 import type { AuthUser } from '../common/auth/auth.decorators';
 import { addDays, fromDbDate, toDbDate } from '../common/dates';

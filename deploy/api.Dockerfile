@@ -27,6 +27,6 @@ RUN mkdir -p /app/backend/storage && chown stagetrack /app/backend/storage
 USER stagetrack
 WORKDIR /app/backend
 EXPOSE 3000
-# Les migrations sont appliquées à chaque démarrage (idempotent), puis l'API démarre.
+# Migrations run as a separate one-shot Compose service.
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["node", "dist/main.js"]

@@ -9,7 +9,7 @@ RUN npm ci --workspace frontend --include-workspace-root
 COPY frontend frontend
 RUN npm run build --workspace frontend
 
-FROM nginx:1.27-alpine
+FROM nginx:1.30.6-alpine
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 EXPOSE 80 443

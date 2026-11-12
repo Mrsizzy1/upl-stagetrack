@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ComponentState, MachineStatus, Prisma } from '@prisma/client';
+import { ComponentState, MachineStatus, Prisma } from '../generated/prisma/client';
 import * as QRCode from 'qrcode';
 import { AuditService } from '../common/audit/audit.service';
 import { AuthUser } from '../common/auth/auth.decorators';

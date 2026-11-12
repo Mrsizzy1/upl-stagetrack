@@ -3,7 +3,7 @@
  * Passer `tx` pour écrire dans la même transaction que l'action : pas d'action sans trace.
  */
 import { Global, Injectable, Module } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 type Db = PrismaService | Prisma.TransactionClient;

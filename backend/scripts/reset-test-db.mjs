@@ -7,7 +7,7 @@ if (!url || !/test/i.test(new URL(url).pathname)) {
   console.error('DATABASE_URL_TEST absente ou ne désignant pas une base de test : arrêt.');
   process.exit(1);
 }
-const run = spawnSync('npx', ['prisma', 'migrate', 'reset', '--force', '--skip-seed', '--skip-generate'], {
+const run = spawnSync('npx', ['prisma', 'migrate', 'reset', '--force'], {
   stdio: 'inherit',
   env: { ...process.env, DATABASE_URL: url },
   shell: process.platform === 'win32',

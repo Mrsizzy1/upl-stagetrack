@@ -11,4 +11,5 @@ storage/
 deploy/certs/*
 !deploy/certs/.gitkeep
 backend/storage-test/
+backend/src/generated/prisma/
 .pgdata/

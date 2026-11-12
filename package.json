@@ -16,6 +16,7 @@
     "dev:api": "npm run start:dev -w backend",
     "dev:web": "npm run dev -w frontend",
     "test": "npm run test -w backend",
-    "build": "npm run build -w backend && npm run build -w frontend"
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "check:production-config": "node deploy/check-production-env.mjs"
   }
 }

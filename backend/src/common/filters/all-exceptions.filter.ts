@@ -4,7 +4,7 @@
  * `code` est stable et lisible par le frontend ; aucune trace technique n'est renvoyée au client.
  */
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client';
 import type { Request, Response } from 'express';
 
 export interface ApiErrorBody {

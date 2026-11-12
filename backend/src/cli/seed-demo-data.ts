@@ -1,8 +1,9 @@
-import { PrismaClient, MachineStatus, ComponentState, InterventionPriority, InterventionStatus, ItemType, ItemCategory, ItemStatus, StudentStatus } from '@prisma/client';
+import { MachineStatus, ComponentState, InterventionPriority, InterventionStatus, ItemType, ItemCategory, ItemStatus, StudentStatus } from '../generated/prisma/client';
 import { randomBytes, createHash } from 'node:crypto';
 import { generateToken, hashToken, sealToken } from '../domain/qr/qr-token';
+import { createPrismaClient } from '../prisma/create-prisma-client';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEMO_SEED !== 'true') {

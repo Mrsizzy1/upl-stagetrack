@@ -7,7 +7,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Unauthor
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import type { RoleCode } from '@prisma/client';
+import type { RoleCode } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   ALLOW_PENDING_PASSWORD_KEY,

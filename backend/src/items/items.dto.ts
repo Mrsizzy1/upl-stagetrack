@@ -1,4 +1,4 @@
-import { ItemCategory, ItemStatus, ItemType, ClaimStatus } from '@prisma/client';
+import { ItemCategory, ItemStatus, ItemType, ClaimStatus } from '../generated/prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsDateString,

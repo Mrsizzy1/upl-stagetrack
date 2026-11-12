@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Res, StreamableFile } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Prisma, ScanResult } from '@prisma/client';
+import { Prisma, ScanResult } from '../generated/prisma/client';
 import type { Response } from 'express';
 import { Roles } from '../common/auth/auth.decorators';
 import { addDays } from '../common/dates';

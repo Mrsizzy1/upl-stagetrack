@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import * as QRCode from 'qrcode';
 import { AuditService } from '../common/audit/audit.service';
 import type { AuthUser } from '../common/auth/auth.decorators';

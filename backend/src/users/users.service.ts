@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, RoleCode } from '@prisma/client';
+import { Prisma, RoleCode } from '../generated/prisma/client';
 import * as argon2 from 'argon2';
 import { AuditService } from '../common/audit/audit.service';
 import type { AuthUser } from '../common/auth/auth.decorators';

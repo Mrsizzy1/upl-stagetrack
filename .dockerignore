@@ -1,0 +1,15 @@
+.git
+.gitignore
+.pgdata
+node_modules
+**/node_modules
+**/dist
+**/coverage
+**/storage
+backend/src/generated/prisma
+.env
+.env.*
+**/.env
+**/.env.*
+deploy/certs
+*.log

@@ -3,7 +3,7 @@
  * ou à la clôture, avec les bornes horaires figées au moment de la création.
  */
 import { Injectable } from '@nestjs/common';
-import { AttendanceSession, Prisma } from '@prisma/client';
+import { AttendanceSession, Prisma } from '../generated/prisma/client';
 import { toDbDate } from '../common/dates';
 import { sessionBounds } from '../domain/attendance/schedule-rules';
 import { PrismaService } from '../prisma/prisma.service';

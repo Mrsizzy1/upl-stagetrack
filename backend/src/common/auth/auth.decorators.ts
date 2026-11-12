@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
-import type { RoleCode } from '@prisma/client';
+import type { RoleCode } from '../../generated/prisma/client';
 import type { Request } from 'express';
 
 export const IS_PUBLIC_KEY = 'auth:public';

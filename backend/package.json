@@ -20,9 +20,6 @@
     "prisma:seed": "prisma db seed",
     "prisma:validate": "prisma validate"
   },
-  "prisma": {
-    "seed": "node -r @swc-node/register src/cli/seed.ts"
-  },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
@@ -32,16 +29,19 @@
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.0.0",
     "@nestjs/throttler": "^6.0.0",
-    "@prisma/client": "^6.19.0",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "argon2": "^0.41.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
-    "csv-parse": "^5.6.0",
+    "csv-parse": "^7.0.3",
+    "dotenv": "^17.4.1",
     "exceljs": "^4.4.0",
     "helmet": "^8.0.0",
     "pdfkit": "^0.17.0",
-    "prisma": "^6.19.0",
+    "pg": "^8.23.1",
+    "prisma": "^7.10.1",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"

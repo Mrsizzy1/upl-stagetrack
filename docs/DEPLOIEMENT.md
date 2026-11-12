@@ -28,6 +28,9 @@ cd /opt/upl-stagetrack
 npm install                 # génère package-lock.json, utilisé par les images Docker
 cp deploy/.env.production.example deploy/.env.production
 nano deploy/.env.production # remplacer chaque CHANGER
+chmod 600 deploy/.env.production
+node deploy/check-production-env.mjs
+docker compose -f docker-compose.prod.yml --env-file deploy/.env.production config --quiet
 ```
 
 Générer les secrets :
@@ -37,7 +40,15 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"  
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"  # JWT_REFRESH_SECRET
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"     # QR_TOKEN_ENCRYPTION_KEY
 node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"  # POSTGRES_PASSWORD
+node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"  # APP_DB_PASSWORD
+node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"  # MIGRATOR_DB_PASSWORD
 ```
+
+Les trois mots de passe PostgreSQL doivent être différents. `POSTGRES_USER` est le compte
+d'administration utilisé uniquement par PostgreSQL, les sauvegardes et le provisionnement.
+`stagetrack_migrator` possède les objets du schéma et ne sert qu'au job de migration ;
+`stagetrack_app` ne reçoit que les droits de lecture et d'écriture nécessaires à l'API.
+Le conteneur API ne reçoit jamais le mot de passe administrateur ni celui du migrateur.
 
 Conserver une copie de `deploy/.env.production` hors du serveur, en lieu sûr.
 
@@ -65,12 +76,15 @@ docker compose -f docker-compose.prod.yml --env-file deploy/.env.production up -
 docker compose -f docker-compose.prod.yml logs -f api      # « API démarrée … »
 ```
 
-Les migrations sont appliquées automatiquement au démarrage de l'API.
+Au démarrage, Compose vérifie PostgreSQL, crée ou met à jour les rôles applicatifs,
+exécute les migrations dans le conteneur ponctuel `migrate`, puis démarre l'API.
+L'API ne démarre pas si une migration échoue. Les fichiers `.env` locaux, certificats
+et volumes ne sont pas inclus dans le contexte de construction Docker.
 
 Première fois seulement — rôles, horaires officiels et compte administrateur :
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file deploy/.env.production exec api node dist/cli/seed.js
+docker compose -f docker-compose.prod.yml --env-file deploy/.env.production --profile setup run --rm --no-deps seed
 ```
 
 Ouvrir `https://<adresse>/`, se connecter avec `SEED_ADMIN_USERNAME`, changer le mot de passe,
@@ -98,6 +112,13 @@ Copier régulièrement `/srv/sauvegardes/stagetrack` hors du serveur. Restaurer 
 ```bash
 docker compose -f docker-compose.prod.yml exec -T postgres \
   pg_restore -U stagetrack -d stagetrack --clean --if-exists --no-owner < stagetrack-AAAAMMJJTHHMMSSZ.dump
+```
+
+Après la restauration, réappliquer les propriétaires et privilèges des rôles séparés :
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file deploy/.env.production \
+  run --rm --no-deps provision-db
 ```
 
 Tester une restauration au moins une fois avant la mise en service.

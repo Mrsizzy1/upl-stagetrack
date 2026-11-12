@@ -4,7 +4,7 @@
  */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import ExcelJS from 'exceljs';
 import { addDays, fromDbDate, toDbDate } from '../common/dates';
 import {

@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://stagetrack:stagetrack_dev@localhost:5432/stagetrack
+      DATABASE_URL_TEST: postgresql://stagetrack:stagetrack_dev@localhost:5432/stagetrack_test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: stagetrack
+          POSTGRES_PASSWORD: stagetrack_dev
+          POSTGRES_DB: stagetrack
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stagetrack -d stagetrack"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate -w backend
+      - run: npm run prisma:validate -w backend
+      - run: npm run build
+      - name: Validate production deployment files
+        run: |
+          docker compose --file docker-compose.prod.yml --env-file deploy/.env.production.example config --quiet
+          sh -n deploy/provision-production-db.sh
+      - name: Prepare isolated test database
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+          PGPASSWORD=stagetrack_dev createdb --host localhost --username stagetrack stagetrack_test
+      - run: npm run test -w backend
+      - name: Build production API image
+        run: docker build --file deploy/api.Dockerfile --tag upl-stagetrack-api:ci .
+      - name: Build production web image
+        run: docker build --file deploy/web.Dockerfile --tag upl-stagetrack-web:ci .

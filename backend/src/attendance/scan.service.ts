@@ -7,7 +7,7 @@
  * Chaque tentative, acceptée ou refusée, est écrite dans ScanAttempt.
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { AttendanceStatus, CaptureMethod, Prisma, SessionType } from '@prisma/client';
+import { AttendanceStatus, CaptureMethod, Prisma, SessionType } from '../generated/prisma/client';
 import type { AuthUser } from '../common/auth/auth.decorators';
 import { Clock } from '../common/clock/clock';
 import { toDbDate } from '../common/dates';
