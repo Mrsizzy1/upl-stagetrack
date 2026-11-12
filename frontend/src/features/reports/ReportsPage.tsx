@@ -148,7 +148,7 @@ export function ReportsPage() {
             </>
           }
         >
-          <p className="mb-3 text-sm text-upl-blue-800">
+          <p className="mb-3 text-sm text-slate-600">
             Du {formatDate(report.data.from)} au {formatDate(report.data.to)}
             {report.data.filters.length > 0 && ` · ${report.data.filters.join(' · ')}`}
           </p>
@@ -167,7 +167,7 @@ export function ReportsPage() {
                     <th className={`${thClass} text-right`}>Taux de présence</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-upl-blue-100">
+                <tbody className="divide-y divide-slate-200">
                   {report.data.rows.map((r) => (
                     <tr key={r.key}>
                       <td className={tdClass}>{submitted?.groupBy === 'day' ? formatDate(r.label) : r.label}</td>

@@ -44,7 +44,7 @@ export function ImportPage() {
         }
       />
       <Card className="mb-6">
-        <div className="space-y-2 text-sm text-upl-blue-800">
+        <div className="space-y-2 text-sm text-slate-600">
           <p>
             Colonnes obligatoires : <code>matricule, nom, postnom, prenom, faculte, departement, promotion, date_inscription</code>.
           </p>
@@ -108,7 +108,7 @@ export function ImportPage() {
                       <th className={thClass}>Problème</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-upl-blue-100">
+                  <tbody className="divide-y divide-slate-200">
                     {report.errors.map((e, i) => (
                       <tr key={i}>
                         <td className={tdClass}>{e.line}</td>

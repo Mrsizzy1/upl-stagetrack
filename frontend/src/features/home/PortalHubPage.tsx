@@ -1,157 +1,175 @@
+import { useQuery } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-import { useUser } from '../../lib/auth';
+import { NAV } from '../../components/AppLayout';
 import {
-  GraduationCapIcon,
-  SearchIcon,
-  MonitorIcon,
-  SettingsIcon,
-  UserIcon,
+  AlertTriangleIcon,
   ArrowRightIcon,
+  CheckSquareIcon,
+  GraduationCapIcon,
+  MonitorIcon,
+  SearchIcon,
+  SettingsIcon,
+  UsersIcon,
+  WrenchIcon,
 } from '../../components/Icons';
+import { StatCard } from '../../components/ui';
+import { api } from '../../lib/api';
+import { useUser } from '../../lib/auth';
+import { formatLongDate, todayInLubumbashi } from '../../lib/format';
+import type { Role, SupervisionOverview } from '../../lib/types';
+
+interface HubService {
+  icon: (props: { size?: number; className?: string }) => ReactNode;
+  title: string;
+  description: string;
+  /** Liens proposés, dans l'ordre : le premier accessible devient l'action principale. */
+  links: { to: string; label: string }[];
+}
+
+const SERVICES: HubService[] = [
+  {
+    icon: GraduationCapIcon,
+    title: 'Stages et présences',
+    description: "Pointage par QR Code, feuilles d'émargement et suivi des stagiaires.",
+    links: [
+      { to: '/tableau-de-bord', label: 'Tableau de bord' },
+      { to: '/presences', label: 'Présences' },
+      { to: '/etudiants', label: 'Étudiants' },
+      { to: '/rapports', label: 'Rapports' },
+    ],
+  },
+  {
+    icon: SearchIcon,
+    title: 'Objets perdus et trouvés',
+    description: 'Déclarations, catalogue public et restitutions.',
+    links: [
+      { to: '/objets', label: 'Catalogue' },
+      { to: '/admin/objets', label: 'Modération' },
+    ],
+  },
+  {
+    icon: MonitorIcon,
+    title: 'Salles et parc informatique',
+    description: 'Plan des salles de TP, état des machines et suivi des pannes.',
+    links: [
+      { to: '/parc/laboratoires', label: 'Salles et laboratoires' },
+      { to: '/parc/interventions', label: 'Pannes et maintenance' },
+      { to: '/parc/technicien', label: 'Contrôle technique' },
+    ],
+  },
+  {
+    icon: SettingsIcon,
+    title: 'Administration',
+    description: "Comptes, paramètres de l'institution, journal d'audit et état du système.",
+    links: [
+      { to: '/comptes', label: 'Comptes' },
+      { to: '/supervision', label: 'Paramètres' },
+      { to: '/journal', label: "Journal d'audit" },
+      { to: '/systeme', label: 'État du système' },
+    ],
+  },
+];
+
+const ADMIN_ROLES: Role[] = ['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'];
+
+/** Un lien n'est proposé que si le rôle y a accès (même règle que la navigation latérale). */
+function canOpen(to: string, role: Role): boolean {
+  const item = NAV.find((n) => n.to === to);
+  return item ? item.roles.includes(role) : false;
+}
+
+function Indicators() {
+  const overview = useQuery({
+    queryKey: ['supervision-overview'],
+    queryFn: () => api.get<SupervisionOverview>('/supervision/overview'),
+    refetchInterval: 60_000,
+  });
+  const ov = overview.data;
+  if (!ov) return null;
+  const rate = ov.stages.attendanceRate;
+  return (
+    <section aria-label="Indicateurs du jour" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatCard label="Étudiants actifs" value={ov.stages.activeStudents} hint={`${ov.stages.activeInternships} stage(s) en cours`} icon={<UsersIcon size={20} />} />
+      <StatCard
+        label="Présences aujourd'hui"
+        value={ov.stages.todayAttendances.present}
+        hint={rate === null ? 'Taux disponible après la première clôture' : `Taux de présence : ${Math.round(rate)} %`}
+        tone="green"
+        icon={<CheckSquareIcon size={20} />}
+      />
+      <StatCard
+        label="Objets à modérer"
+        value={ov.items.pending}
+        hint={`${ov.items.claimRequested} réclamation(s) ouverte(s)`}
+        tone={ov.items.pending > 0 ? 'amber' : 'neutral'}
+        icon={<SearchIcon size={20} />}
+      />
+      <StatCard
+        label="Machines en panne"
+        value={ov.labs.machines.defective}
+        hint={`${ov.labs.activeInterventions} intervention(s) active(s) · ${ov.labs.machines.total} machines`}
+        tone={ov.labs.machines.defective > 0 ? 'red' : 'neutral'}
+        icon={ov.labs.machines.defective > 0 ? <AlertTriangleIcon size={20} /> : <WrenchIcon size={20} />}
+      />
+    </section>
+  );
+}
 
 export function PortalHubPage() {
   const user = useUser();
-  const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(user.role);
+  const isAdmin = ADMIN_ROLES.includes(user.role);
+  const firstName = user.fullName.trim().split(/\s+/)[0];
+
+  const services = SERVICES.map((s) => ({ ...s, links: s.links.filter((l) => canOpen(l.to, user.role)) })).filter((s) => s.links.length > 0);
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* En-tête institutionnel */}
-      <div className="border-b border-slate-200 pb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-upl-blue-950 tracking-tight">
-          Portail Numérique Facultaire
-        </h1>
-        <p className="mt-2 text-sm sm:text-base text-slate-600">
-          Sélectionnez un service pour accéder aux outils de gestion académique, logistique et technique.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <header>
+        <p className="text-sm text-slate-500 first-letter:uppercase">{formatLongDate(todayInLubumbashi())}</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[28px]">Bonjour, {firstName}</h1>
+        <p className="mt-1.5 text-sm text-slate-600">Voici l'essentiel du portail. Choisissez un service pour commencer.</p>
+      </header>
 
-      {/* Cartes de services professionnels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* CARTE 1 : STAGES */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:border-upl-blue-300 hover:shadow-sm transition-all flex flex-col justify-between p-6">
-          <div>
-            <div className="h-11 w-11 rounded-lg bg-blue-50 text-upl-blue-700 flex items-center justify-center mb-4">
-              <GraduationCapIcon size={24} />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900">Stages & Présences</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Pointage par QR Code, feuilles d'émargement et suivi des stagiaires.
-            </p>
-          </div>
-          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-            <Link
-              to="/tableau-de-bord"
-              className="inline-flex items-center gap-2 rounded-lg bg-upl-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-upl-blue-800 transition-colors shadow-xs"
-            >
-              <span>Ouvrir</span>
-              <ArrowRightIcon size={16} />
-            </Link>
-            <Link to="/presences" className="text-xs font-medium text-slate-600 hover:text-upl-blue-700">
-              Émargement
-            </Link>
-          </div>
+      {isAdmin && <Indicators />}
+
+      <section aria-labelledby="hub-services">
+        <h2 id="hub-services" className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          Services
+        </h2>
+        <div className="grid gap-5 md:grid-cols-2">
+          {services.map(({ icon: Icon, title, description, links }) => {
+            const [main, ...others] = links;
+            return (
+              <article key={title} className="flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md sm:p-6">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-upl-blue-50 text-upl-blue-700 ring-1 ring-inset ring-upl-blue-100">
+                    <Icon size={22} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{description}</p>
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-2 border-t border-slate-100 pt-4">
+                  <Link
+                    to={main.to}
+                    className="group mr-2 inline-flex items-center gap-2 rounded-lg bg-upl-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-upl-blue-800"
+                  >
+                    {main.label}
+                    <ArrowRightIcon size={15} className="transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                  {others.map((l) => (
+                    <Link key={l.to} to={l.to} className="rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
         </div>
-
-        {/* CARTE 2 : OBJETS PERDUS */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all flex flex-col justify-between p-6">
-          <div>
-            <div className="h-11 w-11 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center mb-4">
-              <SearchIcon size={22} />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900">Objets Perdus & Trouvés</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Déclaration des objets égarés, catalogue public et restitutions.
-            </p>
-          </div>
-          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-            <Link
-              to="/objets"
-              className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition-colors shadow-xs"
-            >
-              <span>Consulter</span>
-              <ArrowRightIcon size={16} />
-            </Link>
-            {isAdmin && (
-              <Link to="/admin/objets" className="text-xs font-medium text-slate-600 hover:text-amber-800">
-                Modération
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* CARTE 3 : SALLES INFORMATIQUES */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:border-slate-400 hover:shadow-sm transition-all flex flex-col justify-between p-6">
-          <div>
-            <div className="h-11 w-11 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center mb-4">
-              <MonitorIcon size={22} />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900">Salles & Parc Informatique</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Plan des salles de TP, état des machines et suivi des pannes.
-            </p>
-          </div>
-          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-            <Link
-              to="/parc/laboratoires"
-              className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900 transition-colors shadow-xs"
-            >
-              <span>Consulter</span>
-              <ArrowRightIcon size={16} />
-            </Link>
-            <Link to="/parc/interventions" className="text-xs font-medium text-slate-600 hover:text-slate-900">
-              Maintenance
-            </Link>
-          </div>
-        </div>
-
-        {/* CARTE 4 : MON ESPACE OU ADMINISTRATION */}
-        {isAdmin ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:border-slate-400 hover:shadow-sm transition-all flex flex-col justify-between p-6">
-            <div>
-              <div className="h-11 w-11 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center mb-4">
-                <SettingsIcon size={22} />
-              </div>
-              <h2 className="text-lg font-bold text-slate-900">Administration Système</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Gestion des comptes, journal d'audit et configuration du portail.
-              </p>
-            </div>
-            <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-              <Link
-                to="/comptes"
-                className="inline-flex items-center gap-2 rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800 transition-colors shadow-xs"
-              >
-                <span>Gérer</span>
-                <ArrowRightIcon size={16} />
-              </Link>
-              <Link to="/supervision" className="text-xs font-medium text-slate-600 hover:text-purple-800">
-                Paramètres
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all flex flex-col justify-between p-6">
-            <div>
-              <div className="h-11 w-11 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center mb-4">
-                <UserIcon size={22} />
-              </div>
-              <h2 className="text-lg font-bold text-slate-900">Mon Espace Personnel</h2>
-              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                Consultation de la fiche étudiante, téléchargement du QR Code individuel et suivi de l'assiduité.
-              </p>
-            </div>
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <Link
-                to="/mon-espace"
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 transition-colors shadow-xs"
-              >
-                <span>Accéder à mon dossier</span>
-                <ArrowRightIcon size={16} />
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 }

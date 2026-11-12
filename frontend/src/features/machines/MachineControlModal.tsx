@@ -105,7 +105,7 @@ export function MachineControlModal({
               return (
                 <div key={c.id} className="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-upl-blue-950">{c.componentType.name}</span>
+                    <span className="font-bold text-xs text-slate-900">{c.componentType.name}</span>
                     <span className="text-[10px] text-slate-500 font-semibold uppercase">{current.state}</span>
                   </div>
 
@@ -116,13 +116,13 @@ export function MachineControlModal({
                         const isSelected = current.state === st;
                         const btnColor =
                           st === 'FUNCTIONAL'
-                            ? isSelected ? 'bg-emerald-600 text-white' : 'hover:bg-emerald-50 text-emerald-800'
+                            ? isSelected ? 'bg-success-600 text-white' : 'hover:bg-success-50 text-success-800'
                             : st === 'DEFECTIVE'
-                            ? isSelected ? 'bg-red-600 text-white' : 'hover:bg-red-50 text-red-800'
+                            ? isSelected ? 'bg-danger-600 text-white' : 'hover:bg-danger-50 text-danger-800'
                             : st === 'MISSING'
-                            ? isSelected ? 'bg-amber-600 text-white' : 'hover:bg-amber-50 text-amber-800'
+                            ? isSelected ? 'bg-upl-gold-600 text-white' : 'hover:bg-upl-gold-50 text-upl-gold-800'
                             : st === 'TO_CHECK'
-                            ? isSelected ? 'bg-orange-600 text-white' : 'hover:bg-orange-50 text-orange-800'
+                            ? isSelected ? 'bg-upl-gold-600 text-white' : 'hover:bg-upl-gold-50 text-upl-gold-800'
                             : isSelected ? 'bg-slate-700 text-white' : 'hover:bg-slate-100 text-slate-700';
 
                         return (
@@ -143,7 +143,7 @@ export function MachineControlModal({
                   {current.state !== 'FUNCTIONAL' && (
                     <input
                       type="text"
-                      placeholder="Observation (ex: bouton gauche souris bloqué, câble dénudé...)"
+                      placeholder="Observations réelles du contrôle"
                       value={current.notes}
                       onChange={(e) => handleNotesChange(c.componentType.id, e.target.value)}
                       className="block w-full text-xs rounded border border-slate-300 px-2 py-1 bg-white"
@@ -160,7 +160,7 @@ export function MachineControlModal({
             <Textarea
               id={id}
               rows={2}
-              placeholder="Ex: Poste vérifié complet, mise à jour effectuée, souris nettoyée..."
+              placeholder="Actions réellement effectuées"
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
             />

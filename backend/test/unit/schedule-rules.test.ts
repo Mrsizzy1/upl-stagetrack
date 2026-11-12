@@ -6,19 +6,23 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  INITIAL_WINDOWS,
-  SessionWindow,
   evaluateScanTime,
   sessionBounds,
   validateWindows,
   describeRefusal,
 } from '../../src/domain/attendance/schedule-rules';
+import type { SessionWindow } from '../../src/domain/attendance/schedule-rules';
 
 const TZ = 'Africa/Lubumbashi';
+// Valeurs de test uniquement : elles ne sont pas des horaires UPL par défaut.
+const TEST_WINDOWS: readonly SessionWindow[] = [
+  { sessionType: 'MORNING', opensAtMinute: 7 * 60 + 45, closesAtMinute: 8 * 60 + 45, lateAfterMinute: null, activeWeekdays: [1, 2, 3, 4, 5] },
+  { sessionType: 'EVENING', opensAtMinute: 17 * 60, closesAtMinute: 17 * 60 + 30, lateAfterMinute: null, activeWeekdays: [1, 2, 3, 4, 5] },
+];
 // Le lundi 9 novembre 2026 ; Lubumbashi est en UTC+02:00.
 const MONDAY = '2026-11-09';
 const at = (date: string, time: string) => new Date(`${date}T${time}+02:00`);
-const decide = (time: string, date = MONDAY, windows: readonly SessionWindow[] = INITIAL_WINDOWS) =>
+const decide = (time: string, date = MONDAY, windows: readonly SessionWindow[] = TEST_WINDOWS) =>
   evaluateScanTime(at(date, time), TZ, windows);
 
 describe('Session du matin (07h45 – 08h45)', () => {
@@ -80,27 +84,27 @@ describe('Session du soir (17h00 – 17h30)', () => {
 
 describe('Fuseau horaire et changement de date', () => {
   it('05h45 UTC correspond à 07h45 à Lubumbashi : accepté', () => {
-    const d = evaluateScanTime(new Date('2026-11-09T05:45:00Z'), TZ, INITIAL_WINDOWS);
+    const d = evaluateScanTime(new Date('2026-11-09T05:45:00Z'), TZ, TEST_WINDOWS);
     assert.equal(d.outcome, 'OPEN');
   });
   it('05h44:59 UTC correspond à 07h44:59 : refusé', () => {
-    const d = evaluateScanTime(new Date('2026-11-09T05:44:59.999Z'), TZ, INITIAL_WINDOWS);
+    const d = evaluateScanTime(new Date('2026-11-09T05:44:59.999Z'), TZ, TEST_WINDOWS);
     assert.equal(d.outcome, 'TOO_EARLY');
   });
   it('22h30 UTC le dimanche est déjà lundi 00h30 à Lubumbashi', () => {
-    const d = evaluateScanTime(new Date('2026-11-08T22:30:00Z'), TZ, INITIAL_WINDOWS);
+    const d = evaluateScanTime(new Date('2026-11-08T22:30:00Z'), TZ, TEST_WINDOWS);
     assert.equal(d.localDate, MONDAY);
     assert.equal(d.outcome, 'TOO_EARLY');
   });
   it('21h59 UTC le lundi est encore lundi 23h59 à Lubumbashi', () => {
-    const d = evaluateScanTime(new Date('2026-11-09T21:59:00Z'), TZ, INITIAL_WINDOWS);
+    const d = evaluateScanTime(new Date('2026-11-09T21:59:00Z'), TZ, TEST_WINDOWS);
     assert.equal(d.localDate, MONDAY);
   });
   it("le même instant n'est pas lu à l'heure du navigateur : un autre fuseau donne une autre décision", () => {
     // 07h45 à Lubumbashi = 05h45 à Londres en novembre ; si l'on prenait Europe/London, ce serait trop tôt.
     const instant = new Date('2026-11-09T05:45:00Z');
-    assert.equal(evaluateScanTime(instant, TZ, INITIAL_WINDOWS).outcome, 'OPEN');
-    assert.equal(evaluateScanTime(instant, 'Europe/London', INITIAL_WINDOWS).outcome, 'TOO_EARLY');
+    assert.equal(evaluateScanTime(instant, TZ, TEST_WINDOWS).outcome, 'OPEN');
+    assert.equal(evaluateScanTime(instant, 'Europe/London', TEST_WINDOWS).outcome, 'TOO_EARLY');
   });
 });
 
@@ -113,8 +117,8 @@ describe('Jours sans session', () => {
   });
   it('samedi activé pour le matin seulement', () => {
     const windows: SessionWindow[] = [
-      { ...INITIAL_WINDOWS[0], activeWeekdays: [1, 2, 3, 4, 5, 6] },
-      INITIAL_WINDOWS[1],
+      { ...TEST_WINDOWS[0], activeWeekdays: [1, 2, 3, 4, 5, 6] },
+      TEST_WINDOWS[1],
     ];
     assert.equal(decide('08:00:00', '2026-11-07', windows).outcome, 'OPEN');
     assert.equal(decide('17:10:00', '2026-11-07', windows).outcome, 'SESSION_CLOSED');
@@ -127,7 +131,7 @@ describe('Retards (décision D6)', () => {
     assert.equal(d.outcome === 'OPEN' && d.isLate, false);
   });
   it('seuil à 08h00 : 08h00:59 à l\'heure, 08h01 en retard', () => {
-    const windows: SessionWindow[] = [{ ...INITIAL_WINDOWS[0], lateAfterMinute: 8 * 60 }, INITIAL_WINDOWS[1]];
+    const windows: SessionWindow[] = [{ ...TEST_WINDOWS[0], lateAfterMinute: 8 * 60 }, TEST_WINDOWS[1]];
     const onTime = decide('08:00:59', MONDAY, windows);
     const late = decide('08:01:00', MONDAY, windows);
     assert.equal(onTime.outcome === 'OPEN' && onTime.isLate, false);
@@ -137,13 +141,13 @@ describe('Retards (décision D6)', () => {
 
 describe('Bornes absolues stockées en base', () => {
   it('session du matin : 05h45Z inclus, 06h46Z exclu', () => {
-    const b = sessionBounds(MONDAY, INITIAL_WINDOWS[0], TZ);
+    const b = sessionBounds(MONDAY, TEST_WINDOWS[0], TZ);
     assert.equal(b.opensAt.toISOString(), '2026-11-09T05:45:00.000Z');
     assert.equal(b.closesAt.toISOString(), '2026-11-09T06:46:00.000Z');
     assert.equal(b.lateFrom, null);
   });
   it('session du soir : 15h00Z inclus, 15h31Z exclu', () => {
-    const b = sessionBounds(MONDAY, INITIAL_WINDOWS[1], TZ);
+    const b = sessionBounds(MONDAY, TEST_WINDOWS[1], TZ);
     assert.equal(b.opensAt.toISOString(), '2026-11-09T15:00:00.000Z');
     assert.equal(b.closesAt.toISOString(), '2026-11-09T15:31:00.000Z');
   });
@@ -151,22 +155,22 @@ describe('Bornes absolues stockées en base', () => {
 
 describe('Validation des horaires saisis par l\'administrateur', () => {
   it('les horaires initiaux sont valides', () => {
-    assert.deepEqual(validateWindows(INITIAL_WINDOWS), []);
+    assert.deepEqual(validateWindows(TEST_WINDOWS), []);
   });
   it('refuse une fermeture avant l\'ouverture', () => {
-    const errors = validateWindows([{ ...INITIAL_WINDOWS[0], opensAtMinute: 600, closesAtMinute: 500 }]);
+    const errors = validateWindows([{ ...TEST_WINDOWS[0], opensAtMinute: 600, closesAtMinute: 500 }]);
     assert.ok(errors.length > 0);
   });
   it('refuse un chevauchement matin / soir', () => {
-    const errors = validateWindows([INITIAL_WINDOWS[0], { ...INITIAL_WINDOWS[1], opensAtMinute: 8 * 60 + 30 }]);
+    const errors = validateWindows([TEST_WINDOWS[0], { ...TEST_WINDOWS[1], opensAtMinute: 8 * 60 + 30 }]);
     assert.ok(errors.some((e) => e.includes('chevauchent')));
   });
   it('refuse un seuil de retard hors de la fenêtre', () => {
-    const errors = validateWindows([{ ...INITIAL_WINDOWS[0], lateAfterMinute: 9 * 60 }]);
+    const errors = validateWindows([{ ...TEST_WINDOWS[0], lateAfterMinute: 9 * 60 }]);
     assert.ok(errors.length > 0);
   });
   it('refuse un jour invalide', () => {
-    const errors = validateWindows([{ ...INITIAL_WINDOWS[0], activeWeekdays: [0, 8] }]);
+    const errors = validateWindows([{ ...TEST_WINDOWS[0], activeWeekdays: [0, 8] }]);
     assert.equal(errors.length, 2);
   });
 });

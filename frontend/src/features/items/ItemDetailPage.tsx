@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { UPLLogo } from '../../components/UPLLogo';
+import { BoxIcon } from '../../components/Icons';
+import { PublicHeader } from '../../components/PublicHeader';
 import {
   Alert,
   Badge,
   Button,
+  buttonClass,
   Card,
   ErrorAlert,
   Field,
@@ -34,31 +36,17 @@ export function ItemDetailPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-upl-blue-950 flex flex-col">
-      <header className="bg-white border-b border-upl-blue-100 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3">
-            <UPLLogo size="md" />
-            <div className="leading-tight">
-              <span className="block font-bold text-base text-upl-blue-900">UPL StageTrack</span>
-              <span className="block text-xs text-slate-500">Portail des Objets</span>
-            </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <PublicHeader subtitle="Objets perdus et trouvés">
+        {state.status === 'authenticated' && ['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(state.user.role) && (
+          <Link to="/admin/objets" className={buttonClass('ghost', 'sm')}>
+            Espace de modération
           </Link>
-          <div className="flex items-center gap-3">
-            {state.status === 'authenticated' && (
-              <Link
-                to={['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(state.user.role) ? '/admin/objets' : '/hub'}
-                className="text-xs font-semibold text-upl-blue-800 bg-upl-blue-50 px-3 py-1.5 rounded-lg hover:bg-upl-blue-100"
-              >
-                ← Espace de gestion
-              </Link>
-            )}
-            <Link to="/objets" className="text-sm font-semibold text-upl-blue-700 hover:underline">
-              ← Retour au catalogue
-            </Link>
-          </div>
-        </div>
-      </header>
+        )}
+        <Link to="/objets" className={buttonClass('secondary', 'sm')}>
+          ← Retour au catalogue
+        </Link>
+      </PublicHeader>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         {isLoading ? (
@@ -95,8 +83,8 @@ export function ItemDetailPage() {
                     className="max-h-[400px] w-full object-contain rounded-lg"
                   />
                 ) : (
-                  <div className="text-center p-8 text-slate-400">
-                    <span className="block text-5xl font-bold mb-2">UPL</span>
+                  <div className="flex flex-col items-center gap-3 p-8 text-slate-400">
+                    <BoxIcon size={48} />
                     <span className="text-sm">Aucune photo fournie</span>
                   </div>
                 )}
@@ -263,7 +251,7 @@ function ClaimItemModal({
               required
               minLength={10}
               rows={4}
-              placeholder="Ex: Le mot de passe de session commence par..., il y a une rayure sous la coque droite..."
+              placeholder="Décrivez les signes distinctifs sans révéler de mot de passe ni d'information sensible"
               value={proofDescription}
               onChange={(e) => setProofDescription(e.target.value)}
             />

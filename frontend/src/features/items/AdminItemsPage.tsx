@@ -155,7 +155,7 @@ export function AdminItemsPage() {
                     <th className={thClass}>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-upl-blue-100">
+                <tbody className="divide-y divide-slate-200">
                   {data.items.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                       <td className={tdClass}>
@@ -331,7 +331,7 @@ function ModerateModal({
           {(id) => (
             <Input
               id={id}
-              placeholder="Ex: Informations incomplètes ou inappropriées..."
+              placeholder="Motif factuel de la décision"
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
             />
@@ -511,7 +511,7 @@ function ReturnModal({
               id={id}
               required
               minLength={2}
-              placeholder="Ex: Jean Mukendi"
+              placeholder="Nom complet du déclarant"
               value={returnedToName}
               onChange={(e) => setReturnedToName(e.target.value)}
             />
@@ -522,7 +522,7 @@ function ReturnModal({
           {(id) => (
             <Input
               id={id}
-              placeholder="Ex: MAT-2024-8841 ou N° électeur..."
+              placeholder="Référence figurant sur la pièce vérifiée"
               value={returnedToIdNumber}
               onChange={(e) => setReturnedToIdNumber(e.target.value)}
             />
@@ -534,7 +534,7 @@ function ReturnModal({
             <Textarea
               id={id}
               rows={2}
-              placeholder="Ex: Restitué au secrétariat en présence du surveillant..."
+              placeholder="Description factuelle de la restitution"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />

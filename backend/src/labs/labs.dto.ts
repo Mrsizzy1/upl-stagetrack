@@ -77,7 +77,7 @@ export class CreateRowDto {
 
   @IsString()
   @IsNotEmpty()
-  name!: string; // ex: Rangée Gauche
+  name!: string; // ex: R01
 
   @IsOptional()
   @Type(() => Number)

@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
-import { NavLink, Outlet, Link } from 'react-router';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { NavLink, Outlet, Link, useLocation } from 'react-router';
 import { useAuth, useUser } from '../lib/auth';
-import { ROLE_LABELS } from '../lib/format';
+import { formatLongDate, ROLE_LABELS, todayInLubumbashi } from '../lib/format';
 import type { Role } from '../lib/types';
+import { Loading } from './ui';
 import { UNIVERSITY_NAME, UPLLogo } from './UPLLogo';
 import {
   HomeIcon,
@@ -22,6 +23,10 @@ import {
   ClockIcon,
   DownloadIcon,
   BuildingIcon,
+  MenuIcon,
+  XIcon,
+  ChevronRightIcon,
+  CalendarIcon,
 } from './Icons';
 
 export interface NavItem {
@@ -129,7 +134,7 @@ export const NAV: NavItem[] = NAV_SECTIONS.flatMap((s) => s.items);
 
 function PrintHeader() {
   return (
-    <div className="hidden print:block mb-6 border-b pb-4">
+    <div className="mb-6 hidden border-b border-slate-300 pb-4 print:block">
       <div className="flex items-center gap-3">
         <UPLLogo size="sm" />
         <div>
@@ -141,34 +146,69 @@ function PrintHeader() {
   );
 }
 
+/** Initiales pour la pastille du compte : « Administrateur StageTrack » → « AS ». */
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const letters = parts.length > 1 ? [parts[0][0], parts[parts.length - 1][0]] : [parts[0]?.[0] ?? '?'];
+  return letters.join('').toUpperCase();
+}
+
+/** Section et page courantes, déduites de la navigation (correspondance la plus longue). */
+function useCurrentNav(): { section: string; label: string } | null {
+  const { pathname } = useLocation();
+  let best: { section: string; label: string; length: number } | null = null;
+  for (const section of NAV_SECTIONS) {
+    for (const item of section.items) {
+      const match = pathname === item.to || pathname.startsWith(`${item.to}/`);
+      if (match && (!best || item.to.length > best.length)) best = { section: section.section, label: item.label, length: item.to.length };
+    }
+  }
+  return best;
+}
+
 export function AppLayout() {
   const user = useUser();
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const current = useCurrentNav();
+  const today = formatLongDate(todayInLubumbashi());
+
+  // Tiroir mobile : fermeture par Échap, page figée derrière.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   const brand = (
-    <div className="border-b border-white/10 px-6 py-5">
-      <Link to="/hub" className="flex items-center gap-3">
-        <UPLLogo size="md" decorative priority />
-        <div className="leading-tight">
-          <p className="text-base font-bold text-white tracking-tight">Portail Universitaire</p>
-          <p className="text-xs text-upl-blue-200">{UNIVERSITY_NAME}</p>
-        </div>
-      </Link>
-    </div>
+    <Link to="/hub" onClick={() => setOpen(false)} className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5 focus-visible:outline-white">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+        <UPLLogo heightClass="h-9" decorative priority />
+      </span>
+      <span className="min-w-0 leading-tight">
+        <span className="block truncate text-[15px] font-semibold tracking-tight text-white">UPL StageTrack</span>
+        <span className="block truncate text-[11px] font-medium text-upl-blue-300">Portail universitaire</span>
+      </span>
+    </Link>
   );
 
   const nav = (
-    <nav aria-label="Navigation principale" className="flex flex-col gap-5 px-3 py-4">
+    <nav aria-label="Navigation principale" className="flex flex-col gap-6 px-3 py-5">
       {NAV_SECTIONS.map((section) => {
         const visibleItems = section.items.filter((item) => item.roles.includes(user.role));
         if (visibleItems.length === 0) return null;
 
         return (
           <div key={section.section}>
-            <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-upl-blue-300">
-              {section.section}
-            </p>
+            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-upl-blue-300/80">{section.section}</p>
             <div className="flex flex-col gap-0.5">
               {visibleItems.map((item) => {
                 const IconComponent = item.icon;
@@ -178,14 +218,19 @@ export function AppLayout() {
                     to={item.to}
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive
-                        ? 'bg-white/15 text-white font-semibold'
-                        : 'text-upl-blue-100 hover:bg-white/10 hover:text-white'
+                      `group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] transition-colors focus-visible:outline-white ${
+                        isActive
+                          ? 'bg-white/10 font-semibold text-white before:absolute before:inset-y-1.5 before:-left-3 before:w-1 before:rounded-r-full before:bg-upl-gold-500'
+                          : 'font-medium text-upl-blue-100/80 hover:bg-white/5 hover:text-white'
                       }`
                     }
                   >
-                    <IconComponent size={18} />
-                    <span>{item.label}</span>
+                    {({ isActive }) => (
+                      <>
+                        <IconComponent size={18} className={isActive ? 'shrink-0 text-upl-gold-400' : 'shrink-0 text-upl-blue-300 group-hover:text-white'} />
+                        <span className="truncate">{item.label}</span>
+                      </>
+                    )}
                   </NavLink>
                 );
               })}
@@ -197,95 +242,118 @@ export function AppLayout() {
   );
 
   const account = (
-    <div className="border-t border-white/10 p-4 bg-upl-blue-950/50">
-      <div className="flex items-center justify-between">
-        <div className="min-w-0 pr-2">
-          <p className="text-sm font-semibold text-white truncate">{user.fullName}</p>
-          <p className="text-xs text-upl-blue-200">{ROLE_LABELS[user.role]}</p>
+    <div className="shrink-0 border-t border-white/10 p-3">
+      <div className="flex items-center gap-3 rounded-lg bg-white/5 p-2.5">
+        <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-upl-gold-500 text-xs font-bold text-upl-blue-950">
+          {initials(user.fullName)}
+        </span>
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-[13px] font-semibold text-white" title={user.fullName}>
+            {user.fullName}
+          </p>
+          <p className="truncate text-[11px] text-upl-blue-300">{ROLE_LABELS[user.role]}</p>
         </div>
         <button
           type="button"
           onClick={() => void logout()}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-upl-gold-500 hover:text-upl-gold-400 shrink-0"
-          title="Se déconnecter de la session"
+          className="shrink-0 rounded-md p-2 text-upl-blue-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-white"
+          title="Se déconnecter"
+          aria-label="Se déconnecter"
         >
-          <LogOutIcon size={14} />
-          <span>Quitter</span>
+          <LogOutIcon size={17} />
         </button>
       </div>
     </div>
   );
 
+  const sidebarSurface = 'bg-upl-blue-950 bg-linear-to-b from-upl-blue-900 to-upl-blue-950';
+
   return (
-    <div className="min-h-screen lg:pl-64 flex flex-col bg-slate-50">
-      {/* Barre latérale desktop */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-upl-blue-900 lg:flex z-30 shadow-md">
+    <div className="flex min-h-dvh flex-col bg-slate-50 lg:pl-64">
+      {/* Barre latérale (ordinateur) */}
+      <aside className={`no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col lg:flex ${sidebarSurface}`}>
         {brand}
-        <div className="flex-1 overflow-y-auto">{nav}</div>
+        <div className="nav-scroll flex-1 overflow-y-auto">{nav}</div>
         {account}
       </aside>
 
-      {/* Barre supérieure mobile */}
-      <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-upl-blue-800 bg-upl-blue-900 px-4 lg:hidden">
-        <Link to="/hub" className="flex items-center gap-2.5">
-          <UPLLogo size="sm" decorative priority />
-          <span className="font-bold text-white text-sm">Portail UPL</span>
+      {/* Barre supérieure (mobile) */}
+      <header className="no-print sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
+        <Link to="/hub" className="flex min-w-0 items-center gap-2.5">
+          <UPLLogo heightClass="h-8" decorative priority />
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate text-sm font-semibold text-slate-900">UPL StageTrack</span>
+            {current && <span className="block truncate text-[11px] text-slate-500">{current.label}</span>}
+          </span>
         </Link>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white bg-white/10 hover:bg-white/20"
+          onClick={() => setOpen(true)}
+          aria-label="Ouvrir le menu"
+          aria-expanded={open}
+          className="-mr-1 rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
-          Menu
+          <MenuIcon size={22} />
         </button>
       </header>
 
-      {/* Tiroir mobile */}
+      {/* Tiroir (mobile) */}
       {open && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-900/60"
-            aria-label="Fermer le menu"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-upl-blue-900 shadow-xl">
-            {brand}
-            <div className="flex-1 overflow-y-auto">{nav}</div>
+        <div className="no-print fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <button type="button" className="absolute inset-0 bg-upl-blue-950/60 backdrop-blur-[2px]" aria-label="Fermer le menu" onClick={() => setOpen(false)} />
+          <div className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col shadow-xl ${sidebarSurface}`}>
+            <div className="relative">
+              {brand}
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Fermer le menu"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-upl-blue-200 hover:bg-white/10 hover:text-white focus-visible:outline-white"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+            <div className="nav-scroll flex-1 overflow-y-auto">{nav}</div>
             {account}
           </div>
         </div>
       )}
 
-      {/* Barre supérieure desktop : institutionnelle et sobre */}
-      <header className="hidden lg:flex sticky top-0 z-20 h-14 bg-white border-b border-slate-200 px-8 items-center justify-between shadow-xs">
-        <Link
-          to="/hub"
-          className="text-xs font-semibold text-slate-600 hover:text-upl-blue-700 inline-flex items-center gap-2"
-        >
-          <HomeIcon size={16} />
-          <span>Accueil du portail</span>
-        </Link>
-        <div className="flex items-center gap-4 text-xs">
-          <span className="font-medium text-slate-700">{user.fullName}</span>
-          <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-semibold border border-slate-200">
+      {/* Barre supérieure (ordinateur) : fil d'Ariane, date de référence, rôle */}
+      <header className="no-print sticky top-0 z-20 hidden h-16 items-center justify-between gap-6 border-b border-slate-200 bg-white/90 px-8 backdrop-blur lg:flex">
+        <nav aria-label="Fil d'Ariane" className="flex min-w-0 items-center gap-2 text-sm">
+          <Link to="/hub" className="rounded-md p-1 text-slate-400 transition-colors hover:text-upl-blue-700" aria-label="Accueil du portail" title="Accueil du portail">
+            <HomeIcon size={16} />
+          </Link>
+          {current && (
+            <>
+              <ChevronRightIcon size={14} className="shrink-0 text-slate-300" />
+              <span className="truncate text-slate-500">{current.section}</span>
+              <ChevronRightIcon size={14} className="shrink-0 text-slate-300" />
+              <span className="truncate font-semibold text-slate-900">{current.label}</span>
+            </>
+          )}
+        </nav>
+        <div className="flex shrink-0 items-center gap-3 text-xs">
+          <span className="inline-flex items-center gap-2 text-slate-500" title="Date à Lubumbashi">
+            <CalendarIcon size={15} className="text-slate-400" />
+            <span className="first-letter:uppercase">{today}</span>
+          </span>
+          <span aria-hidden className="h-5 w-px bg-slate-200" />
+          <span className="inline-flex items-center rounded-full bg-upl-blue-50 px-2.5 py-1 font-semibold text-upl-blue-800 ring-1 ring-inset ring-upl-blue-200">
             {ROLE_LABELS[user.role]}
           </span>
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="inline-flex items-center gap-1.5 text-slate-500 hover:text-red-700 font-medium ml-1 transition-colors"
-          >
-            <LogOutIcon size={14} />
-            <span>Déconnexion</span>
-          </button>
         </div>
       </header>
 
       {/* Contenu principal */}
-      <main className="flex-1 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 w-full">
+      <main className="mx-auto w-full max-w-[84rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <PrintHeader />
-        <Outlet />
+        <Suspense fallback={<Loading />}>
+          <div className="animate-enter">
+            <Outlet />
+          </div>
+        </Suspense>
       </main>
     </div>
   );

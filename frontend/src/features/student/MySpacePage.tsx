@@ -70,7 +70,7 @@ export function MySpacePage() {
               </dd>
             </dl>
           </div>
-          <p className="mt-4 text-sm text-upl-blue-800">
+          <p className="mt-4 text-sm text-slate-600">
             Stage : {current ? `du ${formatDate(current.startDate)} au ${formatDate(current.endDate)}` : 'aucune période enregistrée'}
           </p>
         </Card>
@@ -79,7 +79,7 @@ export function MySpacePage() {
           {s.activeQrIssuedAt ? (
             <>
               <AuthImage src="/me/qr.png" alt="Mon QR Code de pointage" className="mx-auto h-52 w-52" />
-              <p className="mt-2 text-center text-xs text-upl-blue-800">Présentez ce code à l'agent de pointage. Ne le partagez pas.</p>
+              <p className="mt-2 text-center text-xs text-slate-600">Présentez ce code à l'agent de pointage. Ne le partagez pas.</p>
               <div className="mt-3 flex justify-center">
                 <Button variant="secondary" onClick={() => downloadFile('/me/qr.png', `mon-qr-${s.matricule}.png`).catch(setDownloadError)}>
                   Télécharger
@@ -123,14 +123,14 @@ export function MySpacePage() {
                   <th className={thClass}>Heure</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-upl-blue-100">
+              <tbody className="divide-y divide-slate-200">
                 {history.data.items.map((r) => (
                   <tr key={r.id}>
                     <td className={tdClass}>{formatDate(r.date)}</td>
                     <td className={tdClass}>{SESSION_LABELS[r.sessionType]}</td>
                     <td className={tdClass}>
                       <Badge tone={attendanceTone(r.status)}>{ATTENDANCE_LABELS[r.status]}</Badge>
-                      {r.isCorrected && <span className="ml-2 text-xs text-upl-blue-800">corrigé par l'administration</span>}
+                      {r.isCorrected && <span className="ml-2 text-xs text-slate-600">corrigé par l'administration</span>}
                     </td>
                     <td className={`${tdClass} tabular-nums`}>{formatTime(r.recordedAt)}</td>
                   </tr>

@@ -91,18 +91,18 @@ export function UsersPage() {
                     <th className={thClass}><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-upl-blue-100">
+                <tbody className="divide-y divide-slate-200">
                   {list.data.items.map((u) => (
                     <tr key={u.id}>
                       <td className={tdClass}>
                         {u.fullName}
-                        {u.email && <div className="text-xs text-upl-blue-800">{u.email}</div>}
+                        {u.email && <div className="text-xs text-slate-600">{u.email}</div>}
                       </td>
                       <td className={`${tdClass} font-mono text-xs`}>{u.username}</td>
                       <td className={tdClass}>{ROLE_LABELS[u.role.code]}</td>
                       <td className={tdClass}>
                         {u.isActive ? <Badge tone="success">Actif</Badge> : <Badge tone="danger">Désactivé</Badge>}
-                        {u.mustChangePassword && <div className="mt-1 text-xs text-upl-blue-800">Mot de passe provisoire</div>}
+                        {u.mustChangePassword && <div className="mt-1 text-xs text-slate-600">Mot de passe provisoire</div>}
                         {u.lockedUntil && new Date(u.lockedUntil) > new Date() && <div className="mt-1 text-xs text-danger-700">Bloqué temporairement</div>}
                       </td>
                       <td className={tdClass}>{formatDateTime(u.lastLoginAt)}</td>

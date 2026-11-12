@@ -1,36 +1,47 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
 
+/**
+ * Mise à jour partielle des paramètres de l'institution.
+ * Un champ facultatif envoyé à null (ou vide) est effacé ; un champ absent est inchangé.
+ */
 export class UpdateSettingsDto {
   @IsOptional()
   @IsString()
-  institutionName?: string;
+  @MaxLength(200)
+  institutionName?: string | null;
 
   @IsOptional()
   @IsString()
-  facultyName?: string;
+  @MaxLength(200)
+  facultyName?: string | null;
 
   @IsOptional()
   @IsString()
-  acronym?: string;
+  @MaxLength(20)
+  acronym?: string | null;
 
   @IsOptional()
   @IsString()
-  logoUrl?: string;
+  @MaxLength(500)
+  logoUrl?: string | null;
 
   @IsOptional()
   @IsEmail()
-  contactEmail?: string;
+  @MaxLength(254)
+  contactEmail?: string | null;
 
   @IsOptional()
   @IsString()
-  contactPhone?: string;
+  @MaxLength(40)
+  contactPhone?: string | null;
 
   @IsOptional()
   @IsString()
-  address?: string;
+  @MaxLength(300)
+  address?: string | null;
 
   @IsOptional()
   @IsString()
-  portalSubtitle?: string;
+  @MaxLength(300)
+  portalSubtitle?: string | null;
 }
-

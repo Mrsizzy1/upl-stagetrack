@@ -25,7 +25,7 @@ Africa/Lubumbashi. Seule la synchronisation NTP compte.
 sudo mkdir -p /opt/upl-stagetrack && sudo chown "$USER" /opt/upl-stagetrack
 cd /opt/upl-stagetrack
 # copier ici le contenu du dépôt (git clone ou archive), puis :
-npm install                 # génère package-lock.json, utilisé par les images Docker
+npm ci
 cp deploy/.env.production.example deploy/.env.production
 nano deploy/.env.production # remplacer chaque CHANGER
 chmod 600 deploy/.env.production
@@ -81,7 +81,7 @@ exécute les migrations dans le conteneur ponctuel `migrate`, puis démarre l'AP
 L'API ne démarre pas si une migration échoue. Les fichiers `.env` locaux, certificats
 et volumes ne sont pas inclus dans le contexte de construction Docker.
 
-Première fois seulement — rôles, horaires officiels et compte administrateur :
+Première fois seulement — rôles, types de composants et compte administrateur :
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file deploy/.env.production --profile setup run --rm --no-deps seed
@@ -96,7 +96,7 @@ puis retirer `SEED_ADMIN_PASSWORD` de `deploy/.env.production`.
 2. **Comptes** : créer les responsables de stage et les agents de pointage.
 3. **Étudiants** : import CSV/Excel (modèle téléchargeable) ou saisie ; vérifier les périodes de stage.
 4. **Cartes** : imprimer les cartes QR depuis chaque fiche étudiant.
-5. **Horaires** : vérifier 07h45–08h45 et 17h00–17h30, les jours actifs, les jours non travaillés.
+5. **Horaires** : saisir et faire valider par l'administration les plages horaires, jours actifs et jours non travaillés avant tout pointage.
 6. **Essai** : un scan de test par un agent, sur tablette et sur smartphone.
 
 ## 6. Sauvegardes
@@ -129,7 +129,7 @@ Tester une restauration au moins une fois avant la mise en service.
 cd /opt/upl-stagetrack
 ./deploy/backup.sh /srv/sauvegardes/stagetrack     # toujours avant une mise à jour
 # remplacer le code par la nouvelle version, puis :
-npm install
+npm ci
 docker compose -f docker-compose.prod.yml --env-file deploy/.env.production up -d --build
 ```
 

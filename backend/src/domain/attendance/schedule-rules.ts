@@ -1,15 +1,7 @@
 /**
- * Règles horaires du pointage — module pur, sans base de données ni NestJS.
- *
- * Décisions appliquées (voir le dossier de Phase 1) :
- *  - D5 : la minute de fermeture est incluse. Avec une fermeture à 08h45,
- *         08h45:59 est accepté et 08h46:00 est refusé.
- *  - D6 : aucun retard tant que `lateAfterMinute` vaut null.
- *         Sinon, un pointage est « en retard » à partir de la minute qui suit
- *         `lateAfterMinute` (seuil 08h00 → 08h00:59 à l'heure, 08h01:00 en retard).
- *  - D7 : les sessions du matin et du soir sont indépendantes.
- *
- * Seule l'heure fournie par le serveur (service Clock) est passée à ces fonctions.
+ * Règles horaires pures. Les plages et jours proviennent de la configuration enregistrée.
+ * La minute de fermeture est incluse. Un retard commence à la minute après le seuil configuré.
+ * L'heure fournie par le service Clock est la seule utilisée pour décider d'un pointage.
  */
 import { formatMinuteOfDay, localToInstant, toLocal } from '../time/zoned-time';
 
@@ -17,9 +9,9 @@ export type SessionType = 'MORNING' | 'EVENING';
 
 export interface SessionWindow {
   sessionType: SessionType;
-  /** Première minute acceptée (07h45 = 465). */
+  /** Première minute acceptée depuis minuit. */
   opensAtMinute: number;
-  /** Dernière minute acceptée, incluse (08h45 = 525). */
+  /** Dernière minute acceptée, incluse. */
   closesAtMinute: number;
   /** Dernière minute « à l'heure », incluse ; null = pas de retard. */
   lateAfterMinute: number | null;
@@ -38,12 +30,6 @@ export type ScanTimeDecision =
       nextOpensAtMinute: number | null;
     }
   | { outcome: 'NO_SESSION'; localDate: string };
-
-/** Horaires initiaux fixés par le cahier des charges (D1). Jours actifs : hypothèse D8, à confirmer (Q2). */
-export const INITIAL_WINDOWS: readonly SessionWindow[] = [
-  { sessionType: 'MORNING', opensAtMinute: 7 * 60 + 45, closesAtMinute: 8 * 60 + 45, lateAfterMinute: null, activeWeekdays: [1, 2, 3, 4, 5] },
-  { sessionType: 'EVENING', opensAtMinute: 17 * 60, closesAtMinute: 17 * 60 + 30, lateAfterMinute: null, activeWeekdays: [1, 2, 3, 4, 5] },
-];
 
 const LAST_MINUTE = 1439;
 
@@ -196,7 +182,7 @@ export interface NextOpening {
   closesAtMinute: number;
 }
 
-/** « Prochaine session : lundi 9 novembre à 07h45 (matin). » ; null → aucune session programmée. */
+/** Decrit la prochaine session issue des horaires configures; null si aucune n'est programmee. */
 export function describeNextOpening(next: NextOpening | null, today: string, tomorrow: string): string {
   if (!next) return 'Aucune session programmée dans les trois prochaines semaines.';
   const when =

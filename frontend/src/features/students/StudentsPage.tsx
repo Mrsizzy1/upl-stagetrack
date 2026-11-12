@@ -133,7 +133,7 @@ export function StudentsPage() {
                     <th className={thClass}>Statut</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-upl-blue-100">
+                <tbody className="divide-y divide-slate-200">
                   {list.data.items.map((s) => (
                     <tr key={s.id} className="hover:bg-upl-blue-50">
                       <td className={`${tdClass} font-mono text-xs`}>{s.matricule}</td>
@@ -144,7 +144,7 @@ export function StudentsPage() {
                       </td>
                       <td className={tdClass}>
                         {s.faculty.code}
-                        <div className="text-xs text-upl-blue-800">{s.department.name}</div>
+                        <div className="text-xs text-slate-600">{s.department.name}</div>
                       </td>
                       <td className={tdClass}>{s.promotion.label}</td>
                       <td className={`${tdClass} text-xs`}>

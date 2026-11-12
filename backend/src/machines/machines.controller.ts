@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -18,6 +19,7 @@ import { AuthUser, CurrentUser, Public, Roles } from '../common/auth/auth.decora
 import {
   CreateInterventionDto,
   CreateMachineDto,
+  DeleteAllMachinesDto,
   PerformControlDto,
   ReportIssueDto,
   UpdateInterventionDto,
@@ -66,6 +68,17 @@ export class MachinesController {
     @Req() req: Request,
   ) {
     return this.machinesService.create(dto, actor, req.ip ?? null);
+  }
+
+  @ApiBearerAuth()
+  @Roles('SUPER_ADMIN', 'ADMIN')
+  @Delete('machines')
+  deleteAll(
+    @Body() dto: DeleteAllMachinesDto,
+    @CurrentUser() actor: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.machinesService.deleteAll(dto, actor, req.ip ?? null);
   }
 
   @ApiBearerAuth()

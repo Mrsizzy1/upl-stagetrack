@@ -1,6 +1,7 @@
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router';
 import { UPLLogo, UNIVERSITY_NAME } from './UPLLogo';
 import { AlertCircleIcon, HomeIcon } from './Icons';
+import { buttonClass } from './ui';
 
 export function RootErrorBoundary() {
   const error = useRouteError();
@@ -11,44 +12,33 @@ export function RootErrorBoundary() {
   if (isRouteErrorResponse(error)) {
     title = `Erreur ${error.status}`;
     message = error.statusText || message;
-  } else if (error instanceof Error) {
+  } else if (error instanceof Error && import.meta.env.DEV) {
+    // Détail technique réservé au développement : en production, le message générique suffit.
     message = error.message;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center space-y-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-lg ring-1 ring-slate-200">
         <div className="flex justify-center">
-          <UPLLogo size="md" />
+          <UPLLogo heightClass="h-12" />
         </div>
-        <div className="flex justify-center text-amber-600">
-          <div className="h-12 w-12 rounded-full bg-amber-50 flex items-center justify-center">
-            <AlertCircleIcon size={28} />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-          <p className="text-sm text-slate-600">{message}</p>
-        </div>
-        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="rounded-lg bg-upl-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-upl-blue-800 transition-colors"
-          >
+        <span className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-danger-50 text-danger-600 ring-1 ring-inset ring-danger-200">
+          <AlertCircleIcon size={24} />
+        </span>
+        <h1 className="mt-4 text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">{message}</p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <button type="button" onClick={() => window.location.reload()} className={buttonClass('primary')}>
             Recharger la page
           </button>
-          <Link
-            to="/hub"
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-          >
+          <Link to="/" className={buttonClass('secondary')}>
             <HomeIcon size={16} />
-            <span>Accueil</span>
+            Accueil
           </Link>
         </div>
-        <p className="text-xs text-slate-400">{UNIVERSITY_NAME}</p>
+        <p className="mt-6 text-xs text-slate-400">{UNIVERSITY_NAME}</p>
       </div>
     </div>
   );
 }
-

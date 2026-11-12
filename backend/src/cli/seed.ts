@@ -1,7 +1,6 @@
 /**
  * Données initiales indispensables au démarrage :
  *  - les rôles pris en charge par l'application ;
- *  - les horaires officiels (07h45–08h45, 17h00–17h30), en vigueur à partir d'aujourd'hui ;
  *  - un compte administrateur, mot de passe à changer à la première connexion.
  *
  * Aucune faculté, aucun étudiant, aucun pointage n'est créé : ces données viennent
@@ -13,8 +12,6 @@
 import { RoleCode } from '../generated/prisma/client';
 import { createPrismaClient } from '../prisma/create-prisma-client';
 import * as argon2 from 'argon2';
-import { INITIAL_WINDOWS, validateWindows } from '../domain/attendance/schedule-rules';
-import { assertValidTimeZone, toLocal } from '../domain/time/zoned-time';
 import { ARGON2_OPTIONS } from '../common/security/password-hashing';
 
 const prisma = createPrismaClient();
@@ -52,36 +49,10 @@ function requireEnv(name: string): string {
 }
 
 async function main(): Promise<void> {
-  const timeZone = process.env.APP_TIMEZONE ?? 'Africa/Lubumbashi';
-  assertValidTimeZone(timeZone);
-
   for (const role of ROLES) {
     await prisma.role.upsert({ where: { code: role.code }, update: { label: role.label }, create: role });
   }
   console.log(`Rôles : ${ROLES.length} présents.`);
-
-  const errors = validateWindows(INITIAL_WINDOWS);
-  if (errors.length > 0) throw new Error(`Horaires initiaux invalides : ${errors.join(' ; ')}`);
-
-  const today = toLocal(new Date(), timeZone).date;
-  for (const w of INITIAL_WINDOWS) {
-    const existing = await prisma.attendanceSchedule.findFirst({ where: { sessionType: w.sessionType } });
-    if (existing) {
-      console.log(`Horaire ${w.sessionType} déjà défini, inchangé.`);
-      continue;
-    }
-    await prisma.attendanceSchedule.create({
-      data: {
-        sessionType: w.sessionType,
-        opensAtMinute: w.opensAtMinute,
-        closesAtMinute: w.closesAtMinute,
-        lateAfterMinute: w.lateAfterMinute,
-        activeWeekdays: [...w.activeWeekdays],
-        effectiveFrom: new Date(`${today}T00:00:00Z`),
-      },
-    });
-    console.log(`Horaire ${w.sessionType} créé, en vigueur à partir du ${today}.`);
-  }
 
   const username = requireEnv('SEED_ADMIN_USERNAME');
   const existingAdmin = await prisma.user.findUnique({ where: { username } });
@@ -120,12 +91,9 @@ async function main(): Promise<void> {
     await prisma.institutionSetting.create({
       data: {
         institutionName: 'Université Protestante de Lubumbashi',
-        facultyName: 'Faculté des Sciences Informatiques',
+        facultyName: '',
         acronym: 'UPL',
         logoUrl: '/brand/upl-logo.png',
-        contactEmail: 'contact@upl-univ.ac',
-        contactPhone: '+243 000 000 000',
-        address: 'Lubumbashi, RDC',
         portalSubtitle: 'Portail numérique unifié des services universitaires',
       },
     });

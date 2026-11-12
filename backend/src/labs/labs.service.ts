@@ -103,28 +103,15 @@ export class LabsService {
       throw new ConflictException({ code: 'CODE_EXISTS', message: 'Un laboratoire avec ce code existe déjà' });
     }
 
-    const lab = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.laboratory.create({
-        data: {
-          code: dto.code.trim().toUpperCase(),
-          name: dto.name.trim(),
-          building: dto.building.trim(),
-          location: dto.location.trim(),
-          description: dto.description?.trim(),
-          managerId: dto.managerId,
-        },
-      });
-
-      // Rangées par défaut créées automatiquement (RG, RM, RD)
-      await tx.laboratoryRow.createMany({
-        data: [
-          { laboratoryId: created.id, code: 'RG', name: 'Rangée Gauche', sortOrder: 1 },
-          { laboratoryId: created.id, code: 'RM', name: 'Rangée Milieu', sortOrder: 2 },
-          { laboratoryId: created.id, code: 'RD', name: 'Rangée Droite', sortOrder: 3 },
-        ],
-      });
-
-      return created;
+    const lab = await this.prisma.laboratory.create({
+      data: {
+        code: dto.code.trim().toUpperCase(),
+        name: dto.name.trim(),
+        building: dto.building.trim(),
+        location: dto.location.trim(),
+        description: dto.description?.trim(),
+        managerId: dto.managerId,
+      },
     });
 
     await this.audit.log({

@@ -2,7 +2,7 @@
 
 ## Règles à connaître
 
-- Matin : pointage de **07h45 à 08h45** (08h45 et 59 secondes compris). Soir : **17h00 à 17h30**.
+- Les horaires de pointage sont configurés par l'administrateur dans **Horaires**. Aucun horaire n'est prérempli : vérifiez les horaires officiels avant le premier pointage.
 - Un seul pointage par étudiant et par session. Un second scan affiche « Étudiant déjà pointé ».
 - Seule l'heure du serveur compte, affichée en haut de l'écran de pointage.
 - À la fermeture d'une session, les étudiants attendus qui n'ont pas pointé sont marqués absents.

@@ -68,13 +68,13 @@ export function LabDetailPage() {
   const statusBg = (status: MachineStatus) => {
     switch (status) {
       case 'FUNCTIONAL':
-        return 'bg-emerald-500 text-white';
+        return 'bg-success-500 text-white';
       case 'TO_CHECK':
-        return 'bg-amber-500 text-white';
+        return 'bg-upl-gold-500 text-white';
       case 'DEFECTIVE':
-        return 'bg-red-600 text-white';
+        return 'bg-danger-600 text-white';
       case 'MAINTENANCE':
-        return 'bg-blue-600 text-white';
+        return 'bg-upl-blue-600 text-white';
       case 'OUT_OF_SERVICE':
       default:
         return 'bg-slate-600 text-white';
@@ -84,13 +84,13 @@ export function LabDetailPage() {
   const statusBorder = (status: MachineStatus) => {
     switch (status) {
       case 'FUNCTIONAL':
-        return 'border-emerald-500/50 hover:border-emerald-600';
+        return 'border-success-500/50 hover:border-success-600';
       case 'TO_CHECK':
-        return 'border-amber-500/50 hover:border-amber-600';
+        return 'border-upl-gold-500/50 hover:border-upl-gold-600';
       case 'DEFECTIVE':
-        return 'border-red-500/50 hover:border-red-600';
+        return 'border-danger-500/50 hover:border-danger-600';
       case 'MAINTENANCE':
-        return 'border-blue-500/50 hover:border-blue-600';
+        return 'border-upl-blue-500/50 hover:border-upl-blue-600';
       case 'OUT_OF_SERVICE':
       default:
         return 'border-slate-400 hover:border-slate-600';
@@ -189,16 +189,16 @@ export function LabDetailPage() {
               <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
                 <span className="text-slate-400 font-bold">Légende :</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-emerald-500" /> Fonctionnelle
+                  <span className="h-3 w-3 rounded-full bg-success-500" /> Fonctionnelle
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-amber-500" /> À vérifier
+                  <span className="h-3 w-3 rounded-full bg-upl-gold-500" /> À vérifier
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-red-600" /> Défectueuse
+                  <span className="h-3 w-3 rounded-full bg-danger-600" /> Défectueuse
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-blue-600" /> En maintenance
+                  <span className="h-3 w-3 rounded-full bg-upl-blue-600" /> En maintenance
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded-full bg-slate-600" /> Hors service
@@ -255,7 +255,7 @@ export function LabDetailPage() {
                                 </span>
                               </div>
 
-                              <p className="font-extrabold text-xs text-upl-blue-950 truncate">{m.code}</p>
+                              <p className="font-extrabold text-xs text-slate-900 truncate">{m.code}</p>
                               <p className="text-[11px] text-slate-600 truncate mt-0.5">{m.name}</p>
 
                               {m.brand && (
@@ -289,14 +289,14 @@ export function LabDetailPage() {
                       <th className={thClass}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-upl-blue-100">
+                  <tbody className="divide-y divide-slate-200">
                     {lab.rows
                       ?.flatMap((r) => (r.machines ?? []).map((m) => ({ ...m, rowName: r.name, rowCode: r.code })))
                       .filter((m) => statusFilter === 'ALL' || m.generalStatus === statusFilter)
                       .map((m) => (
                         <tr key={m.id} className="hover:bg-slate-50 transition-colors">
                           <td className={tdClass}>
-                            <p className="font-bold text-upl-blue-950">{m.code}</p>
+                            <p className="font-bold text-slate-900">{m.code}</p>
                             <p className="text-xs text-slate-500">{m.name}</p>
                           </td>
                           <td className={tdClass}>
@@ -471,7 +471,7 @@ function MachineDrawerModal({
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                 Code du poste
               </span>
-              <p className="font-mono text-xl font-black text-upl-blue-950 tracking-tight">
+              <p className="font-mono text-xl font-black text-slate-900 tracking-tight">
                 {machine.code}
               </p>
               <p className="text-xs font-semibold text-slate-700 truncate">
@@ -616,7 +616,7 @@ function AddMachineModal({
               <Input
                 id={id}
                 required
-                placeholder="LAB01-RG-M01"
+                placeholder="Code d'inventaire réel"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
               />
@@ -628,7 +628,7 @@ function AddMachineModal({
               <Input
                 id={id}
                 required
-                placeholder="Poste M01"
+                placeholder="Nom ou type de machine"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -649,7 +649,7 @@ function AddMachineModal({
           {(id) => (
             <Input
               id={id}
-              placeholder="Ex: CN-0X8449-..."
+              placeholder="Numéro indiqué par le fabricant"
               value={serialNumber}
               onChange={(e) => setSerialNumber(e.target.value)}
             />
@@ -721,7 +721,7 @@ function AddRowModal({
             <Input
               id={id}
               required
-              placeholder="R04"
+              placeholder="Code réel de la rangée"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
             />
@@ -733,7 +733,7 @@ function AddRowModal({
             <Input
               id={id}
               required
-              placeholder="Rangée Fenêtres / Rangée 4"
+              placeholder="Nom officiel de la rangée"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />

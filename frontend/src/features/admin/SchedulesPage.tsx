@@ -94,7 +94,7 @@ export function SchedulesPage() {
             </Field>
             <div className="grid gap-6 md:grid-cols-2">
               {(['MORNING', 'EVENING'] as const).map((t) => (
-                <fieldset key={t} className="rounded-md border border-upl-blue-100 p-4">
+                <fieldset key={t} className="rounded-md border border-slate-200 p-4">
                   <legend className="px-1 text-sm font-semibold text-upl-blue-900">Session du {SESSION_LABELS[t].toLowerCase()}</legend>
                   <div className="grid grid-cols-3 gap-3">
                     <Field label="Ouverture" required>
@@ -155,7 +155,7 @@ function ScheduleTable({ rows, onCancel }: { rows: ScheduleView[]; onCancel?: (d
             {onCancel && <th className={thClass}><span className="sr-only">Actions</span></th>}
           </tr>
         </thead>
-        <tbody className="divide-y divide-upl-blue-100">
+        <tbody className="divide-y divide-slate-200">
           {rows.map((r) => (
             <tr key={`${r.sessionType}-${r.effectiveFrom}`}>
               <td className={tdClass}>{SESSION_LABELS[r.sessionType]}</td>
@@ -202,7 +202,7 @@ function NonWorkingDays({ today }: { today: string }) {
   });
   return (
     <Card title="Jours non travaillés à venir" className="mt-6">
-      <p className="mb-3 text-sm text-upl-blue-800">Jours fériés ou congés : aucun scan accepté, aucune absence calculée.</p>
+      <p className="mb-3 text-sm text-slate-600">Jours fériés ou congés : aucun scan accepté, aucune absence calculée.</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -220,7 +220,7 @@ function NonWorkingDays({ today }: { today: string }) {
       </form>
       <ErrorAlert error={add.error ?? remove.error ?? list.error} />
       {list.data && list.data.length === 0 && <Empty>Aucun jour déclaré.</Empty>}
-      <ul className="divide-y divide-upl-blue-100">
+      <ul className="divide-y divide-slate-200">
         {list.data?.map((d) => (
           <li key={d.id} className="flex items-center justify-between py-2 text-sm">
             <span>

@@ -13,9 +13,15 @@ const dateTimeFmt = new Intl.DateTimeFormat('fr-FR', {
   timeZone: TIME_ZONE,
 });
 
+/**
+ * Jour calendaire : accepte « 2026-11-09 » comme « 2026-11-09T00:00:00.000Z » (colonnes DATE renvoyées
+ * en ISO complet par l'API) ; seuls les dix premiers caractères comptent, sans conversion de fuseau.
+ */
+const calendarDay = (value: string) => new Date(`${value.slice(0, 10)}T00:00:00Z`);
+
 /** « 2026-11-09 » → « 09/11/2026 » (date calendaire, sans conversion de fuseau). */
-export const formatDate = (localDate: string | null | undefined) => (localDate ? dateFmt.format(new Date(`${localDate}T00:00:00Z`)) : '—');
-export const formatLongDate = (localDate: string) => longDateFmt.format(new Date(`${localDate}T00:00:00Z`));
+export const formatDate = (localDate: string | null | undefined) => (localDate ? dateFmt.format(calendarDay(localDate)) : '—');
+export const formatLongDate = (localDate: string) => longDateFmt.format(calendarDay(localDate));
 export const formatTime = (iso: string | null | undefined) => (iso ? timeFmt.format(new Date(iso)) : '—');
 export const formatDateTime = (iso: string | null | undefined) => (iso ? dateTimeFmt.format(new Date(iso)) : '—');
 

@@ -25,8 +25,13 @@ export function LabsPage() {
   const user = useUser();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const canManage = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'IT_TECHNICIAN';
+  const canDeleteAll = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
 
   const { data: labs, isLoading, error } = useQuery({
     queryKey: ['laboratories'],
@@ -37,6 +42,21 @@ export function LabsPage() {
   const functionalMachines = labs?.reduce((acc, l) => acc + (l.stats?.functional || 0), 0) ?? 0;
   const defectiveMachines = labs?.reduce((acc, l) => acc + (l.stats?.defective || 0), 0) ?? 0;
   const healthRate = totalMachines > 0 ? Math.round((functionalMachines / totalMachines) * 100) : 100;
+
+  const deleteAllMachines = useMutation({
+    mutationFn: () => api.del<{ deletedCount: number }>('/machines', { confirmation: deleteConfirmation }),
+    onSuccess: ({ deletedCount }) => {
+      setDeleteSuccess(`${deletedCount} machine(s) supprimée(s) de l’inventaire. Les historiques restent conservés.`);
+      setDeleteConfirmation('');
+      setDeleteError(null);
+      setDeleteAllOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ['laboratories'] });
+      void queryClient.invalidateQueries({ queryKey: ['laboratory'] });
+      void queryClient.invalidateQueries({ queryKey: ['interventions'] });
+      void queryClient.invalidateQueries({ queryKey: ['supervision-overview'] });
+    },
+    onError: (error) => setDeleteError(error instanceof ApiError ? error.message : 'La suppression des machines a échoué.'),
+  });
 
   return (
     <div>
@@ -63,9 +83,26 @@ export function LabsPage() {
                 <span>Ajouter une salle</span>
               </Button>
             )}
+            {canDeleteAll && totalMachines > 0 && (
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setDeleteError(null);
+                  setDeleteAllOpen(true);
+                }}
+              >
+                Supprimer toutes les machines ({totalMachines})
+              </Button>
+            )}
           </div>
         }
       />
+
+      {deleteSuccess && (
+        <div className="mb-5">
+          <Alert tone="success">{deleteSuccess}</Alert>
+        </div>
+      )}
 
       {labs && labs.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -120,7 +157,7 @@ export function LabsPage() {
                   </Badge>
                 </div>
 
-                <h3 className="text-lg font-bold text-upl-blue-950 mb-1">{lab.name}</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-1">{lab.name}</h3>
                 <p className="text-xs text-slate-500 mb-4">
                   {lab.building} — {lab.location}
                 </p>
@@ -171,6 +208,39 @@ export function LabsPage() {
           void queryClient.invalidateQueries({ queryKey: ['laboratories'] });
         }}
       />
+
+      <Modal open={deleteAllOpen} title="Supprimer toutes les machines" onClose={() => setDeleteAllOpen(false)}>
+        <div className="space-y-4">
+          <Alert tone="danger">
+            Cette action retire les {totalMachines} machines de l’inventaire dans tous les laboratoires. Les historiques
+            de contrôles et d’interventions seront conservés et porteront le code de la machine.
+          </Alert>
+          {deleteError && <Alert tone="danger">{deleteError}</Alert>}
+          <Field label="Pour confirmer, tapez SUPPRIMER TOUTES LES MACHINES">
+            {(id) => (
+              <Input
+                id={id}
+                autoComplete="off"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+              />
+            )}
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setDeleteAllOpen(false)} disabled={deleteAllMachines.isPending}>
+              Annuler
+            </Button>
+            <Button
+              variant="danger"
+              loading={deleteAllMachines.isPending}
+              disabled={deleteConfirmation !== 'SUPPRIMER TOUTES LES MACHINES'}
+              onClick={() => deleteAllMachines.mutate()}
+            >
+              Supprimer les {totalMachines} machines
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -223,8 +293,7 @@ function CreateLabModal({
         {error && <Alert tone="danger">{error}</Alert>}
 
         <p className="text-xs text-slate-600">
-          Trois rangées initiales (Rangée Gauche, Rangée Milieu, Rangée Droite) seront créées automatiquement. Vous
-          pourrez ensuite ajouter autant de rangées que nécessaire.
+          Le laboratoire sera créé sans rangée ni machine. Ajoutez ensuite les rangées et les postes réellement présents.
         </p>
 
         <div className="grid grid-cols-2 gap-3">
@@ -234,7 +303,7 @@ function CreateLabModal({
                 id={id}
                 required
                 minLength={2}
-                placeholder="LAB01"
+                placeholder="Code réel du laboratoire"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
               />
@@ -247,7 +316,7 @@ function CreateLabModal({
                 id={id}
                 required
                 minLength={2}
-                placeholder="Salle Informatique 1 (Génie Logiciel)"
+                placeholder="Nom officiel du laboratoire"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -261,7 +330,7 @@ function CreateLabModal({
               <Input
                 id={id}
                 required
-                placeholder="Bâtiment Sciences"
+                placeholder="Nom officiel du bâtiment"
                 value={building}
                 onChange={(e) => setBuilding(e.target.value)}
               />
@@ -273,7 +342,7 @@ function CreateLabModal({
               <Input
                 id={id}
                 required
-                placeholder="1er étage, Salle 104"
+                placeholder="Salle ou emplacement réel"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />
@@ -286,7 +355,7 @@ function CreateLabModal({
             <Textarea
               id={id}
               rows={2}
-              placeholder="Capacité, spécialité, équipements particuliers..."
+              placeholder="Description vérifiée (facultatif)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

@@ -17,7 +17,7 @@ Monorepo : `backend/` (API NestJS, Prisma, PostgreSQL) et `frontend/` (React, Vi
 | QR Codes | Jeton opaque 256 bits (aucune donnée personnelle), empreinte SHA-256 + copie chiffrée AES-256-GCM, PNG, carte PDF, régénération, révocation |
 | Pointage | Caméra (html5-qrcode), saisie manuelle avec motif, heure serveur seule, contrainte unique en base, journal de chaque tentative |
 | Clôture | Chaque minute : absents calculés, compteurs figés, rejouable, rattrapage après arrêt |
-| Horaires | Versionnés, seuil de retard configurable (aucun par défaut), jours actifs, jours non travaillés |
+| Horaires | Plages versionnées, seuil de retard activé selon la configuration, jours actifs et jours non travaillés |
 | Corrections | Administrateur seul, motif obligatoire, historique conservé, audit |
 | Tableau de bord | Inscrits, présents matin/soir, absents, retards, taux, 14 jours, derniers pointages, filtres |
 | Rapports | Journalier, hebdomadaire, mensuel, période libre ; par étudiant, faculté, promotion, session, jour ; Excel et PDF |
@@ -34,7 +34,7 @@ Monorepo : `backend/` (API NestJS, Prisma, PostgreSQL) et `frontend/` (React, Vi
 ## Installation en développement
 
 ```bash
-npm install
+npm ci
 npm run db:up                         # PostgreSQL + base de test stagetrack_test
 
 cp backend/.env.example backend/.env  # puis remplacer chaque CHANGER (commandes dans le fichier)
@@ -42,7 +42,7 @@ cp backend/.env.example backend/.env  # puis remplacer chaque CHANGER (commandes
 cd backend
 npx prisma generate
 npx prisma migrate deploy
-npx prisma db seed                    # rôles, horaires officiels, compte administrateur
+npx prisma db seed                    # rôles, types de composants, compte administrateur
 cd ..
 
 npm run dev:api                       # http://localhost:3000/api
@@ -59,26 +59,30 @@ npm run test:integration  # API réelle + base de test (remise à zéro automati
 npm test                  # tout
 ```
 
-`test:integration` couvre les 12 cas obligatoires du cahier des charges (07h44 refusé, 07h45 accepté,
-08h45 accepté, après 08h45 refusé, 16h59 refusé, 17h00 et 17h30 acceptés, après 17h30 refusé,
-double scan, QR révoqué, étudiant suspendu, compte étudiant refusé), 10 scans simultanés,
-la clôture, les corrections et les exports.
+Les plages horaires utilisées dans les tests sont des données de test. Elles ne définissent pas les horaires de l'UPL. Les horaires réels doivent être saisis et validés dans l'application.
 
-## Ce qui a été vérifié, et où
+## Contrôles à effectuer avant une publication
 
 | Vérification | Résultat |
 | --- | --- |
-| 74 tests unitaires (`test/unit`) | Exécutés : tous réussis |
-| Migrations sur PostgreSQL 16 | Appliquées sans erreur |
-| 17 contrôles de contraintes SQL (`test/sql`) | Exécutés : tous réussis |
-| 29 tests d'intégration (API réelle, base de test) | Exécutés : tous réussis |
-| `npm install`, `prisma validate`, compilation TypeScript et de production | Réussis |
-| Interface dans le navigateur, mobile et ordinateur | Contrôlée (voir [docs/RAPPORT-TRAVAUX.md](docs/RAPPORT-TRAVAUX.md)) |
+| Tests unitaires, SQL et d'intégration | À exécuter localement ou via GitHub Actions avant une mise en production |
+| Migrations de base de données | À appliquer et valider sur un environnement de préproduction |
+| Build et interface | À vérifier sur le commit exact destiné au déploiement |
 
 Rapport détaillé des travaux (audit, corrections, vérifications) : [docs/RAPPORT-TRAVAUX.md](docs/RAPPORT-TRAVAUX.md).
 
-La CI applique les migrations sur PostgreSQL 16 et execute les tests SQL et d'integration sur une base isolee. Prisma 7 charge sa configuration depuis `backend/prisma.config.ts`.
+Le workflow GitHub Actions est configuré pour appliquer les migrations sur PostgreSQL 16, exécuter les tests SQL et d'intégration sur une base isolée et construire les images. Vérifiez le résultat du workflow du commit à publier. Prisma 7 charge sa configuration depuis `backend/prisma.config.ts`.
 
+
+## Interface
+
+Le système de design et ses couleurs sont décrits en tête de `frontend/src/index.css` :
+`upl-blue` (marque, actions), `slate` (texte, bordures, fonds), `upl-gold` (accent, attention),
+`danger` (refus, erreurs) et `success` (accepté, présent).
+
+- Composants partagés : `frontend/src/components/ui.tsx` (boutons, champs, cartes, tableaux, badges, alertes, modales).
+- Mises en page : `AppLayout` (application connectée), `AuthLayout` (connexion), `PublicHeader` (pages publiques).
+- Les pages sont chargées à la demande ; seuls l'accueil et la connexion sont dans le lot initial.
 
 ## Décisions en attente de l'UPL
 
@@ -87,11 +91,11 @@ Le code applique une hypothèse configurable, sans rien inventer :
 | Question | Hypothèse actuelle |
 | --- | --- |
 | Liste des facultés, départements, promotions ; format du matricule | Saisie par l'administrateur, aucune valeur préremplie |
-| Jours de pointage, jours fériés | Lundi à vendredi ; jours non travaillés déclarés à l'écran Horaires |
-| Minute de fermeture | Incluse (08h45:59 accepté) |
-| Périmètre du responsable de stage | Tous les stagiaires |
-| Seuil de retard | Aucun |
-| Charte graphique, logo | Bleu marine, blanc, vert ; pas de logo |
+| Jours et plages horaires | A saisir et valider avec l'administration avant le premier pointage |
+| Minute de fermeture | La minute de fermeture configuree est incluse |
+| Perimetre du responsable de stage | A confirmer avec l'UPL |
+| Seuil de retard | A configurer selon la regle officielle |
+| Charte graphique, logo | Logo officiel UPL ; bleu, or et rouge du logo, neutres gris (voir « Interface » ci-dessous) |
 
 ## Arborescence
 

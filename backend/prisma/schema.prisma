@@ -240,9 +240,9 @@ model QRCodeCredential {
 model AttendanceSchedule {
   id              String      @id @default(uuid()) @db.Uuid
   sessionType     SessionType
-  /// Première minute acceptée depuis minuit (07h45 = 465).
+  /// Première minute acceptée depuis minuit.
   opensAtMinute   Int
-  /// Dernière minute acceptée, incluse (08h45 = 525).
+  /// Dernière minute acceptée, incluse.
   closesAtMinute  Int
   /// Dernière minute « à l'heure », incluse. NULL = aucun retard.
   lateAfterMinute Int?
@@ -250,6 +250,7 @@ model AttendanceSchedule {
   activeWeekdays  Int[]
   /// Date locale d'entrée en vigueur.
   effectiveFrom   DateTime    @db.Date
+  approved        Boolean     @default(true)
   createdById     String?     @db.Uuid
   createdBy       User?       @relation("ScheduleAuthor", fields: [createdById], references: [id])
   createdAt       DateTime    @default(now()) @db.Timestamptz(3)
@@ -618,8 +619,9 @@ model MachineComponent {
 
 model MachineControl {
   id            String                 @id @default(uuid()) @db.Uuid
-  machineId     String                 @db.Uuid
-  machine       Machine                @relation(fields: [machineId], references: [id])
+  machineId     String?                @db.Uuid
+  machine       Machine?               @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  machineCode   String
   technicianId  String                 @db.Uuid
   technician    User                   @relation("TechnicianControl", fields: [technicianId], references: [id])
   controlledAt  DateTime               @default(now()) @db.Timestamptz(3)
@@ -648,8 +650,9 @@ model MachineControlDetail {
 
 model TechnicalIntervention {
   id               String               @id @default(uuid()) @db.Uuid
-  machineId        String               @db.Uuid
-  machine          Machine              @relation(fields: [machineId], references: [id])
+  machineId        String?              @db.Uuid
+  machine          Machine?             @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  machineCode      String
   title            String
   description      String
   priority         InterventionPriority @default(MEDIUM)
@@ -685,7 +688,7 @@ model TechnicalIntervention {
 model InstitutionSetting {
   id              String   @id @default(uuid()) @db.Uuid
   institutionName String   @default("Université Protestante de Lubumbashi")
-  facultyName     String   @default("Faculté des Sciences Informatiques")
+  facultyName     String   @default("")
   acronym         String   @default("UPL")
   logoUrl         String?
   contactEmail    String?

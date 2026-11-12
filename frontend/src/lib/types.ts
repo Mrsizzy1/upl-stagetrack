@@ -354,7 +354,8 @@ export interface TechnicalInterventionItem {
     name: string;
     laboratory: { id: string; name: string; code: string };
     row: { code: string; name: string };
-  };
+  } | null;
+  machineCode: string;
   technician: { id: string; fullName: string } | null;
   reportedBy: { id: string; fullName: string } | null;
 }

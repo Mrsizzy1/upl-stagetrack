@@ -151,14 +151,14 @@ export function ScanPage() {
           <p className="mt-1 text-3xl font-semibold tabular-nums">{serverNow ? formatTime(serverNow) : '—'}</p>
           <p className="text-sm text-upl-blue-100">{l ? formatLongDate(l.localDate) : ''}</p>
         </div>
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-upl-blue-100">
-          <p className="text-xs uppercase tracking-wide text-upl-blue-800">Session</p>
+        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <p className="text-xs uppercase tracking-wide text-slate-600">Session</p>
           <p className="mt-1 text-lg font-semibold text-upl-blue-900">
             {l?.openSession ? <Badge tone="success">{SESSION_LABELS[l.openSession]} : ouverte</Badge> : <Badge tone="neutral">Aucune session ouverte</Badge>}
           </p>
-          <p className="mt-1 text-sm text-upl-blue-800">{l?.status}</p>
+          <p className="mt-1 text-sm text-slate-600">{l?.status}</p>
           {l && l.schedule.length > 0 && (
-            <ul className="mt-2 space-y-0.5 border-t border-upl-blue-100 pt-2 text-xs text-upl-blue-800">
+            <ul className="mt-2 space-y-0.5 border-t border-slate-200 pt-2 text-xs text-slate-600">
               {l.schedule.map((s) => (
                 <li key={s.sessionType}>
                   <span className="font-semibold">{SESSION_LABELS[s.sessionType]}</span> : {s.opensAt}–{s.closesAt}, {s.days}
@@ -167,18 +167,18 @@ export function ScanPage() {
             </ul>
           )}
         </div>
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-upl-blue-100">
-          <p className="text-xs uppercase tracking-wide text-upl-blue-800">Pointages enregistrés aujourd'hui</p>
+        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <p className="text-xs uppercase tracking-wide text-slate-600">Pointages enregistrés aujourd'hui</p>
           <div className="mt-1 flex gap-6">
             {(l?.sessions ?? []).map((s) => (
               <div key={s.sessionType}>
                 <p className="text-2xl font-semibold tabular-nums text-upl-blue-900">{s.recorded}</p>
-                <p className="text-xs text-upl-blue-800">
+                <p className="text-xs text-slate-600">
                   {SESSION_LABELS[s.sessionType]} ({s.opensAt}–{s.closesAt})
                 </p>
               </div>
             ))}
-            {l && l.sessions.length === 0 && <p className="text-sm text-upl-blue-800">Pas de session aujourd'hui</p>}
+            {l && l.sessions.length === 0 && <p className="text-sm text-slate-600">Pas de session aujourd'hui</p>}
           </div>
         </div>
       </div>
@@ -198,7 +198,7 @@ export function ScanPage() {
           }
         >
           <div id={READER_ID} className="mx-auto aspect-square w-full max-w-md overflow-hidden rounded-md bg-upl-blue-950/5" />
-          {!cameraOn && !cameraError && <p className="mt-3 text-sm text-upl-blue-800">Démarrez la caméra pour scanner.</p>}
+          {!cameraOn && !cameraError && <p className="mt-3 text-sm text-slate-600">Démarrez la caméra pour scanner.</p>}
           {cameraError && (
             <div className="mt-3">
               <Alert tone="warning">{cameraError}</Alert>
@@ -240,7 +240,7 @@ function ResultPanel({ result, networkError }: { result: ScanResponse | null; ne
   }
   if (!result) {
     return (
-      <div className="rounded-lg border-2 border-dashed border-upl-blue-100 bg-white p-5 text-sm text-upl-blue-800">
+      <div className="rounded-lg border-2 border-dashed border-slate-200 bg-white p-5 text-sm text-slate-600">
         Le résultat du dernier scan s'affichera ici.
       </div>
     );
@@ -259,28 +259,28 @@ function ResultPanel({ result, networkError }: { result: ScanResponse | null; ne
           <AuthImage
             src={s.hasPhoto ? `/students/${s.id}/photo` : null}
             alt={`Photo de ${s.fullName}`}
-            className="h-28 w-24 shrink-0 rounded object-cover ring-1 ring-upl-blue-100"
+            className="h-28 w-24 shrink-0 rounded object-cover ring-1 ring-slate-200"
             fallback={<PhotoPlaceholder className="h-28 w-24 shrink-0 rounded" />}
           />
         ) : null}
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
           {s && (
             <>
-              <dt className="text-upl-blue-800">Nom</dt>
-              <dd className="font-semibold text-upl-blue-950">{s.fullName}</dd>
-              <dt className="text-upl-blue-800">Matricule</dt>
+              <dt className="text-slate-600">Nom</dt>
+              <dd className="font-semibold text-slate-900">{s.fullName}</dd>
+              <dt className="text-slate-600">Matricule</dt>
               <dd>{s.matricule}</dd>
-              <dt className="text-upl-blue-800">Faculté</dt>
+              <dt className="text-slate-600">Faculté</dt>
               <dd>{s.faculty}</dd>
-              <dt className="text-upl-blue-800">Promotion</dt>
+              <dt className="text-slate-600">Promotion</dt>
               <dd>
                 {s.department} · {s.promotion}
               </dd>
             </>
           )}
-          <dt className="text-upl-blue-800">Heure</dt>
+          <dt className="text-slate-600">Heure</dt>
           <dd className="tabular-nums">{formatTime(result.recordedAt ?? result.serverTime)}</dd>
-          <dt className="text-upl-blue-800">Session</dt>
+          <dt className="text-slate-600">Session</dt>
           <dd>{result.sessionType ? SESSION_LABELS[result.sessionType] : '—'}</dd>
         </dl>
       </div>

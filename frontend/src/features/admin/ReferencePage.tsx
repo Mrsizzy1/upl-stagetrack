@@ -67,11 +67,11 @@ export function ReferencePage() {
               {f.departments.length === 0 ? (
                 <Empty>Aucun département.</Empty>
               ) : (
-                <ul className="divide-y divide-upl-blue-100">
+                <ul className="divide-y divide-slate-200">
                   {f.departments.map((d) => (
                     <li key={d.id} className="flex items-center justify-between py-2 text-sm">
                       <span>
-                        {d.name} <span className="font-mono text-xs text-upl-blue-800">({d.code})</span>
+                        {d.name} <span className="font-mono text-xs text-slate-600">({d.code})</span>
                       </span>
                       <span className="flex gap-1">
                         <Button variant="ghost" onClick={() => setEditing({ kind: 'department', id: d.id, facultyId: f.id, code: d.code, name: d.name })}>
@@ -85,7 +85,7 @@ export function ReferencePage() {
                   ))}
                 </ul>
               )}
-              <p className="mt-2 text-xs text-upl-blue-800">{f._count?.students ?? 0} étudiant(s)</p>
+              <p className="mt-2 text-xs text-slate-600">{f._count?.students ?? 0} étudiant(s)</p>
             </Card>
           ))}
         </div>
@@ -93,11 +93,11 @@ export function ReferencePage() {
           {promotions.length === 0 ? (
             <Empty>Aucune promotion.</Empty>
           ) : (
-            <ul className="divide-y divide-upl-blue-100">
+            <ul className="divide-y divide-slate-200">
               {promotions.map((p) => (
                 <li key={p.id} className="flex items-center justify-between py-2 text-sm">
                   <span>
-                    {p.label} <span className="font-mono text-xs text-upl-blue-800">({p.code})</span>
+                    {p.label} <span className="font-mono text-xs text-slate-600">({p.code})</span>
                   </span>
                   <span className="flex gap-1">
                     <Button variant="ghost" onClick={() => setEditing({ kind: 'promotion', id: p.id, code: p.code, label: p.label, sortOrder: p.sortOrder })}>

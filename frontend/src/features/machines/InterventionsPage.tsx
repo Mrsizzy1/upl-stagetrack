@@ -146,13 +146,15 @@ export function InterventionsPage() {
                   <th className={thClass}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-upl-blue-100">
+              <tbody className="divide-y divide-slate-200">
                 {interventions.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                     <td className={tdClass}>
-                      <p className="font-bold text-upl-blue-950">{item.machine.code}</p>
+                      <p className="font-bold text-slate-900">{item.machine?.code ?? item.machineCode}</p>
                       <p className="text-xs text-slate-500">
-                        {item.machine.laboratory.name} ({item.machine.row.name})
+                        {item.machine
+                          ? `${item.machine.laboratory.name} (${item.machine.row.name})`
+                          : 'Machine retirée de l’inventaire'}
                       </p>
                     </td>
                     <td className={tdClass}>
@@ -314,7 +316,7 @@ function CreateInterventionModal({
               id={id}
               required
               minLength={3}
-              placeholder="Ex: Écran ne s'allume plus"
+              placeholder="Intitulé de la panne constatée"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -340,7 +342,7 @@ function CreateInterventionModal({
               required
               minLength={5}
               rows={3}
-              placeholder="Précisez les circonstances de la panne, les tests effectués..."
+              placeholder="Circonstances et vérifications réellement effectuées"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -403,7 +405,8 @@ function ManageInterventionModal({
 
         <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
           <p>
-            <strong>Poste concerné :</strong> {intervention.machine.code} ({intervention.machine.laboratory.name})
+            <strong>Poste concerné :</strong> {intervention.machineCode}
+            {intervention.machine && ` (${intervention.machine.laboratory.name})`}
           </p>
           <p>
             <strong>Description signalée :</strong> {intervention.description}
@@ -443,7 +446,7 @@ function ManageInterventionModal({
           {(id) => (
             <Input
               id={id}
-              placeholder="Ex: Câble HDMI neuf, Souris USB optique Dell..."
+              placeholder="Pièces effectivement remplacées"
               value={replacedParts}
               onChange={(e) => setReplacedParts(e.target.value)}
             />
@@ -455,7 +458,7 @@ function ManageInterventionModal({
             <Textarea
               id={id}
               rows={3}
-              placeholder="Actions de réparation effectuées, tests fonctionnels validés..."
+              placeholder="Actions et résultats réellement constatés"
               value={resolutionReport}
               onChange={(e) => setResolutionReport(e.target.value)}
             />

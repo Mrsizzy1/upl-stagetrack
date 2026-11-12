@@ -5,44 +5,193 @@
 @custom-variant tiny (@media (max-height: 480px));
 
 /*
- * Identité visuelle de l'Université Protestante de Lubumbashi, tirée du logo officiel
- * (public/brand/upl-logo.png) : bleu #0120A7, rouge #FE0404, or #F9B233, blanc.
- *  - bleu : couleur principale (navigation, titres, actions) ; nuances calculées à partir du bleu du logo ;
- *  - or : accent discret (élément actif, filets) ;
- *  - rouge : refus et erreurs, en teinte assombrie pour rester lisible sur fond clair ;
- *  - vert : réservé à l'état « accepté / présent » (lecture immédiate par l'agent de pointage).
+ * Système de design d'UPL StageTrack.
+ *
+ * Identité tirée du logo officiel de l'Université Protestante de Lubumbashi
+ * (public/brand/upl-logo.png) : bleu #0120A7, or #F9B233, rouge #FE0404, blanc.
+ *
+ *  - upl-blue : couleur de marque (navigation, actions principales, liens) ; échelle complète 50 → 950 ;
+ *  - slate    : neutres (texte courant, bordures, fonds) — le texte courant n'est jamais teinté en bleu ;
+ *  - upl-gold : accent discret (élément actif, filets) et état « attention / retard » ;
+ *  - danger   : refus et erreurs, rouge du logo assombri pour rester lisible sur fond clair ;
+ *  - success  : état « accepté / présent » (lecture immédiate par l'agent de pointage).
+ *
+ * Règle : aucune autre palette (amber, emerald, purple…) dans les écrans ; tout passe par ces cinq échelles.
  * Police Inter, embarquée avec l'application (aucun appel à un service externe).
  */
 @theme {
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  --color-upl-blue-950: #030d3d;
+  --color-upl-blue-950: #050c3a;
   --color-upl-blue-900: #0a1a6b;
-  --color-upl-blue-800: #2b3a7a;
+  --color-upl-blue-800: #06198a;
   --color-upl-blue-700: #0120a7;
   --color-upl-blue-600: #1d3cc4;
-  --color-upl-blue-100: #e1e5f4;
-  --color-upl-blue-50: #f4f6fc;
+  --color-upl-blue-500: #4560d3;
+  --color-upl-blue-400: #7186e0;
+  --color-upl-blue-300: #a2b1ec;
+  --color-upl-blue-200: #c9d2f5;
+  --color-upl-blue-100: #e4e9fa;
+  --color-upl-blue-50: #f3f5fd;
 
+  --color-upl-gold-900: #5c3c00;
   --color-upl-gold-800: #7a4f00;
+  --color-upl-gold-700: #a96b06;
+  --color-upl-gold-600: #dc9212;
   --color-upl-gold-500: #f9b233;
+  --color-upl-gold-400: #fabf4d;
+  --color-upl-gold-300: #fbd075;
+  --color-upl-gold-200: #fde3ab;
   --color-upl-gold-100: #fef2d9;
+  --color-upl-gold-50: #fff9eb;
 
   --color-upl-red-600: #fe0404;
 
+  --color-danger-900: #6e0d0d;
+  --color-danger-800: #8f0c0c;
   --color-danger-700: #b80d0d;
+  --color-danger-600: #c81a1a;
+  --color-danger-500: #d63232;
+  --color-danger-400: #e56363;
+  --color-danger-300: #f29c9c;
+  --color-danger-200: #f9c6c6;
   --color-danger-100: #fde4e4;
+  --color-danger-50: #fef4f4;
 
+  --color-success-900: #0f3d25;
+  --color-success-800: #155231;
   --color-success-700: #1c6b3e;
   --color-success-600: #2e8b57;
+  --color-success-500: #379a63;
+  --color-success-400: #52ab79;
+  --color-success-300: #86c9a2;
+  --color-success-200: #b5e0c6;
   --color-success-100: #dcf1e4;
+  --color-success-50: #eff8f3;
+
+  /* Ombres douces, légèrement teintées de bleu nuit : relief discret, jamais « flottant ». */
+  --shadow-xs: 0 1px 2px 0 rgb(5 12 58 / 0.05);
+  --shadow-sm: 0 1px 2px 0 rgb(5 12 58 / 0.06), 0 1px 3px 0 rgb(5 12 58 / 0.04);
+  --shadow-md: 0 2px 4px -1px rgb(5 12 58 / 0.06), 0 6px 12px -2px rgb(5 12 58 / 0.07);
+  --shadow-lg: 0 4px 8px -2px rgb(5 12 58 / 0.06), 0 16px 32px -6px rgb(5 12 58 / 0.12);
+  --shadow-xl: 0 8px 16px -4px rgb(5 12 58 / 0.08), 0 28px 56px -12px rgb(5 12 58 / 0.22);
 }
 
-html {
-  font-family: var(--font-sans);
-  color: var(--color-upl-blue-950);
-  background: var(--color-upl-blue-50);
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    color: var(--color-slate-800);
+    background: var(--color-slate-50);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.011em;
+  }
+
+  ::selection {
+    background: var(--color-upl-blue-100);
+    color: var(--color-upl-blue-950);
+  }
+
+  /* Repère de focus clavier unique pour toute l'application. */
+  :where(a, button, [role='button'], summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-upl-blue-600);
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  button:not(:disabled),
+  [role='button'],
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
+  }
+
+  /* Flèche unique pour les listes déroulantes (l'apparence native varie d'un système à l'autre). */
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+  }
+
+  input[type='date'],
+  input[type='time'] {
+    min-height: 2.375rem;
+  }
+
+  dialog::backdrop {
+    backdrop-filter: blur(2px);
+  }
+
+  /* Barres de défilement fines et neutres. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-slate-300) transparent;
+  }
+}
+
+@layer components {
+  /* Tableaux de données : en-tête en bandeau, lignes survolées. Voir tableClass dans components/ui.tsx. */
+  .ui-table thead th {
+    background: var(--color-slate-50);
+    white-space: nowrap;
+  }
+  .ui-table thead th:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+  }
+  .ui-table thead th:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+  }
+  .ui-table tbody tr {
+    transition: background-color 120ms;
+  }
+  .ui-table tbody tr:hover {
+    background: color-mix(in srgb, var(--color-upl-blue-50) 60%, transparent);
+  }
+
+  /* Barre latérale : défilement discret sur fond sombre. */
+  .nav-scroll {
+    scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+  }
+}
+
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-enter {
+  animation: ui-fade-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 /* Impression (rapports, listes) : navigation masquée, en-tête institutionnel affiché. */

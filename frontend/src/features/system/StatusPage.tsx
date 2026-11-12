@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { ClockIcon, CalendarIcon, ShieldCheckIcon } from '../../components/Icons';
+import { Alert, Loading, PageHeader } from '../../components/ui';
 import { apiFetch, ApiError } from '../../lib/api';
 
 interface Health {
@@ -31,49 +33,51 @@ export function StatusPage() {
   });
 
   return (
-    <section aria-labelledby="status-title" className="space-y-6">
-      <div>
-        <h1 id="status-title" className="text-2xl font-semibold text-upl-blue-900">
-          État du système
-        </h1>
-        <p className="mt-1 text-sm text-upl-blue-800">
-          L'heure affichée est celle du serveur : c'est la seule qui compte pour les pointages.
-        </p>
-      </div>
+    <section>
+      <PageHeader title="État du système" description="L'heure affichée est celle du serveur : c'est la seule qui compte pour les pointages." />
 
-      {health.isPending && <p className="text-upl-blue-800">Connexion au serveur…</p>}
+      {health.isPending && <Loading label="Connexion au serveur…" />}
 
       {health.isError && (
-        <div role="alert" className="rounded-lg border border-danger-700/30 bg-danger-100 p-4 text-danger-700">
-          <p className="font-semibold">
-            {health.error instanceof ApiError && health.error.code === 'DATABASE_UNAVAILABLE'
-              ? 'Base de données injoignable'
-              : 'Erreur de connexion'}
-          </p>
-          <p className="text-sm mt-1">{health.error.message}</p>
-        </div>
+        <Alert
+          tone="danger"
+          title={health.error instanceof ApiError && health.error.code === 'DATABASE_UNAVAILABLE' ? 'Base de données injoignable' : 'Erreur de connexion'}
+        >
+          {health.error.message}
+        </Alert>
       )}
 
       {health.data && (
-        <dl className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-upl-blue-100">
-            <dt className="text-sm text-upl-blue-800">Heure officielle du serveur</dt>
-            <dd className="mt-2 text-3xl font-semibold tabular-nums text-upl-blue-900">{health.data.localTime}</dd>
-            <dd className="mt-1 text-xs text-upl-blue-800">Actualisée toutes les 15 secondes</dd>
+        <dl className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <dt className="flex items-center gap-2 text-[13px] font-medium text-slate-600">
+              <ClockIcon size={16} className="text-slate-400" />
+              Heure officielle du serveur
+            </dt>
+            <dd className="mt-3 text-4xl font-semibold leading-none tracking-tight tabular-nums text-slate-900">{health.data.localTime}</dd>
+            <dd className="mt-3 text-xs text-slate-500">Actualisée toutes les 15 secondes</dd>
           </div>
-          <div className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-upl-blue-100">
-            <dt className="text-sm text-upl-blue-800">Date</dt>
-            <dd className="mt-2 text-lg font-semibold first-letter:uppercase text-upl-blue-900">
-              {formatServerDate(health.data.localDate)}
-            </dd>
-            <dd className="mt-1 text-xs text-upl-blue-800">Fuseau {health.data.timeZone}</dd>
+          <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <dt className="flex items-center gap-2 text-[13px] font-medium text-slate-600">
+              <CalendarIcon size={16} className="text-slate-400" />
+              Date
+            </dt>
+            <dd className="mt-3 text-lg font-semibold text-slate-900 first-letter:uppercase">{formatServerDate(health.data.localDate)}</dd>
+            <dd className="mt-3 text-xs text-slate-500">Fuseau {health.data.timeZone}</dd>
           </div>
-          <div className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-upl-blue-100">
-            <dt className="text-sm text-upl-blue-800">Base de données</dt>
-            <dd className="mt-2 inline-flex items-center gap-2 rounded-full bg-success-100 px-3 py-1 text-sm font-semibold text-success-700">
-              <span aria-hidden className="h-2 w-2 rounded-full bg-success-600" />
+          <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <dt className="flex items-center gap-2 text-[13px] font-medium text-slate-600">
+              <ShieldCheckIcon size={16} className="text-slate-400" />
+              Base de données
+            </dt>
+            <dd className="mt-3 inline-flex items-center gap-2 rounded-full bg-success-50 px-3 py-1 text-sm font-semibold text-success-800 ring-1 ring-inset ring-success-200">
+              <span aria-hidden className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-500 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success-600" />
+              </span>
               Disponible
             </dd>
+            <dd className="mt-3 text-xs text-slate-500">API et base opérationnelles</dd>
           </div>
         </dl>
       )}

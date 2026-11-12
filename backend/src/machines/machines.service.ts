@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateInterventionDto,
   CreateMachineDto,
+  DeleteAllMachinesDto,
   PerformControlDto,
   ReportIssueDto,
   UpdateInterventionDto,
@@ -87,6 +88,29 @@ export class MachinesService {
     });
 
     return this.get(machine.id);
+  }
+
+  /** Remove every inventory machine while preserving historical controls and interventions. */
+  async deleteAll(_dto: DeleteAllMachinesDto, actor: AuthUser, ip?: string | null) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`LOCK TABLE "Machine" IN SHARE ROW EXCLUSIVE MODE`;
+      const countBefore = await tx.machine.count();
+      if (countBefore === 0) return { deletedCount: 0 };
+
+      const result = await tx.machine.deleteMany();
+      await this.audit.log(
+        {
+          actorId: actor.id,
+          action: 'MACHINES_BULK_DELETED',
+          entityType: 'MachineInventory',
+          before: { machineCount: countBefore },
+          after: { machineCount: result.count, historyPreserved: true },
+          ip: ip ?? null,
+        },
+        tx,
+      );
+      return { deletedCount: result.count };
+    });
   }
 
   /**
@@ -272,6 +296,7 @@ export class MachinesService {
     const intervention = await this.prisma.technicalIntervention.create({
       data: {
         machineId: machine.id,
+        machineCode: machine.code,
         title: dto.title.trim(),
         description: descriptionWithContact,
         priority: 'MEDIUM',
@@ -342,6 +367,7 @@ export class MachinesService {
       const control = await tx.machineControl.create({
         data: {
           machineId,
+          machineCode: machine.code,
           technicianId: actor.id,
           generalStatus: calculatedStatus,
           observations: dto.observations,
@@ -470,6 +496,7 @@ export class MachinesService {
     const intervention = await this.prisma.technicalIntervention.create({
       data: {
         machineId: dto.machineId,
+        machineCode: machine.code,
         title: dto.title.trim(),
         description: dto.description.trim(),
         priority: dto.priority,

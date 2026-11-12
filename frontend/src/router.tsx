@@ -1,39 +1,44 @@
-import { ReactNode } from 'react';
+import { lazy, ReactNode, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router';
 import { AppLayout } from './components/AppLayout';
 import { RootErrorBoundary } from './components/RootErrorBoundary';
 import { Loading } from './components/ui';
-import { AttendancePage } from './features/attendance/AttendancePage';
-import { ScanPage } from './features/attendance/ScanPage';
-import { AuditPage } from './features/admin/AuditPage';
-import { ReferencePage } from './features/admin/ReferencePage';
-import { SchedulesPage } from './features/admin/SchedulesPage';
-import { UsersPage } from './features/admin/UsersPage';
-import { ChangePasswordPage } from './features/auth/ChangePasswordPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { HomePage } from './features/home/HomePage';
-import { PortalHubPage } from './features/home/PortalHubPage';
-import { AdminItemsPage } from './features/items/AdminItemsPage';
-import { ItemDetailPage } from './features/items/ItemDetailPage';
-import { ItemsPublicPage } from './features/items/ItemsPublicPage';
-import { LabDetailPage } from './features/labs/LabDetailPage';
-import { LabsPage } from './features/labs/LabsPage';
-import { InterventionsPage } from './features/machines/InterventionsPage';
-import { PublicMachinePage } from './features/machines/PublicMachinePage';
-import { TechnicianScanPage } from './features/machines/TechnicianScanPage';
-import { DashboardPage } from './features/reports/DashboardPage';
-import { ReportsPage } from './features/reports/ReportsPage';
-import { MySpacePage } from './features/student/MySpacePage';
-import { ImportPage } from './features/students/ImportPage';
-import { StudentDetailPage } from './features/students/StudentDetailPage';
-import { StudentFormPage } from './features/students/StudentFormPage';
-import { StudentsPage } from './features/students/StudentsPage';
-import { SupervisionPage } from './features/supervision/SupervisionPage';
-import { NotFoundPage } from './features/system/NotFoundPage';
-import { StatusPage } from './features/system/StatusPage';
 import { useAuth } from './lib/auth';
 import { homeFor } from './lib/routes';
 import type { Role } from './lib/types';
+
+// Pages chargées à la demande : le lot initial ne contient que l'accueil et la connexion.
+const AttendancePage = lazy(() => import('./features/attendance/AttendancePage').then((m) => ({ default: m.AttendancePage })));
+const ScanPage = lazy(() => import('./features/attendance/ScanPage').then((m) => ({ default: m.ScanPage })));
+const AuditPage = lazy(() => import('./features/admin/AuditPage').then((m) => ({ default: m.AuditPage })));
+const ReferencePage = lazy(() => import('./features/admin/ReferencePage').then((m) => ({ default: m.ReferencePage })));
+const SchedulesPage = lazy(() => import('./features/admin/SchedulesPage').then((m) => ({ default: m.SchedulesPage })));
+const UsersPage = lazy(() => import('./features/admin/UsersPage').then((m) => ({ default: m.UsersPage })));
+const ChangePasswordPage = lazy(() => import('./features/auth/ChangePasswordPage').then((m) => ({ default: m.ChangePasswordPage })));
+const PortalHubPage = lazy(() => import('./features/home/PortalHubPage').then((m) => ({ default: m.PortalHubPage })));
+const AdminItemsPage = lazy(() => import('./features/items/AdminItemsPage').then((m) => ({ default: m.AdminItemsPage })));
+const ItemDetailPage = lazy(() => import('./features/items/ItemDetailPage').then((m) => ({ default: m.ItemDetailPage })));
+const ItemsPublicPage = lazy(() => import('./features/items/ItemsPublicPage').then((m) => ({ default: m.ItemsPublicPage })));
+const LabDetailPage = lazy(() => import('./features/labs/LabDetailPage').then((m) => ({ default: m.LabDetailPage })));
+const LabsPage = lazy(() => import('./features/labs/LabsPage').then((m) => ({ default: m.LabsPage })));
+const InterventionsPage = lazy(() => import('./features/machines/InterventionsPage').then((m) => ({ default: m.InterventionsPage })));
+const PublicMachinePage = lazy(() => import('./features/machines/PublicMachinePage').then((m) => ({ default: m.PublicMachinePage })));
+const TechnicianScanPage = lazy(() => import('./features/machines/TechnicianScanPage').then((m) => ({ default: m.TechnicianScanPage })));
+const DashboardPage = lazy(() => import('./features/reports/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const ReportsPage = lazy(() => import('./features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })));
+const MySpacePage = lazy(() => import('./features/student/MySpacePage').then((m) => ({ default: m.MySpacePage })));
+const ImportPage = lazy(() => import('./features/students/ImportPage').then((m) => ({ default: m.ImportPage })));
+const StudentDetailPage = lazy(() => import('./features/students/StudentDetailPage').then((m) => ({ default: m.StudentDetailPage })));
+const StudentFormPage = lazy(() => import('./features/students/StudentFormPage').then((m) => ({ default: m.StudentFormPage })));
+const StudentsPage = lazy(() => import('./features/students/StudentsPage').then((m) => ({ default: m.StudentsPage })));
+const SupervisionPage = lazy(() => import('./features/supervision/SupervisionPage').then((m) => ({ default: m.SupervisionPage })));
+const NotFoundPage = lazy(() => import('./features/system/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
+const StatusPage = lazy(() => import('./features/system/StatusPage').then((m) => ({ default: m.StatusPage })));
+
+/** Attente pendant le chargement d'une page publique (les pages internes attendent dans AppLayout). */
+const page = (element: ReactNode) => <Suspense fallback={<Loading label="Chargement…" />}>{element}</Suspense>;
 
 /** Accès réservé aux utilisateurs connectés ; mot de passe provisoire → changement obligatoire. */
 function RequireAuth() {
@@ -77,15 +82,15 @@ export const router = createBrowserRouter([
   // ── Routes publiques (sans AppLayout) ──────────────────────────────────────
   { path: '/', element: <HomeOrRedirect />, errorElement: <RootErrorBoundary /> },
   { path: '/connexion', element: <LoginPage />, errorElement: <RootErrorBoundary /> },
-  { path: '/changer-mot-de-passe', element: <ChangePasswordPage />, errorElement: <RootErrorBoundary /> },
+  { path: '/changer-mot-de-passe', element: page(<ChangePasswordPage />), errorElement: <RootErrorBoundary /> },
 
   // ── Vue publique machine (QR Code scanné par n'importe quel appareil) ──────
-  { path: '/m/:token', element: <PublicMachinePage />, errorElement: <RootErrorBoundary /> },
-  { path: '/public/machines/:token', element: <PublicMachinePage />, errorElement: <RootErrorBoundary /> },
+  { path: '/m/:token', element: page(<PublicMachinePage />), errorElement: <RootErrorBoundary /> },
+  { path: '/public/machines/:token', element: page(<PublicMachinePage />), errorElement: <RootErrorBoundary /> },
 
   // ── Catalogue public des objets perdus (lecture sans compte) ───────────────
-  { path: '/objets', element: <ItemsPublicPage />, errorElement: <RootErrorBoundary /> },
-  { path: '/objets/:id', element: <ItemDetailPage />, errorElement: <RootErrorBoundary /> },
+  { path: '/objets', element: page(<ItemsPublicPage />), errorElement: <RootErrorBoundary /> },
+  { path: '/objets/:id', element: page(<ItemDetailPage />), errorElement: <RootErrorBoundary /> },
 
   // ── Application authentifiée ───────────────────────────────────────────────
   {

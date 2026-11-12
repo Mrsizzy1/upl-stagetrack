@@ -54,7 +54,7 @@ export function AuditPage() {
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`rounded-md px-4 py-2 text-sm font-semibold ${tab === t ? 'bg-upl-blue-900 text-white' : 'bg-white text-upl-blue-900 ring-1 ring-upl-blue-100'}`}
+            className={`rounded-md px-4 py-2 text-sm font-semibold ${tab === t ? 'bg-upl-blue-900 text-white' : 'bg-white text-upl-blue-900 ring-1 ring-slate-200'}`}
           >
             {t === 'logs' ? 'Actions' : 'Tentatives de scan'}
           </button>
@@ -111,26 +111,26 @@ function Logs() {
                   <th className={thClass}>Détail</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-upl-blue-100">
+              <tbody className="divide-y divide-slate-200">
                 {list.data.items.map((l) => (
                   <tr key={l.id}>
                     <td className={`${tdClass} whitespace-nowrap`}>{formatDateTime(l.at)}</td>
-                    <td className={tdClass}>{l.actor ? l.actor.fullName : <span className="text-upl-blue-800">Système</span>}</td>
+                    <td className={tdClass}>{l.actor ? l.actor.fullName : <span className="text-slate-600">Système</span>}</td>
                     <td className={`${tdClass} font-mono text-xs`}>{l.action}</td>
                     <td className={`${tdClass} text-xs`}>
                       {l.entityType}
-                      {l.entityId && <div className="font-mono text-upl-blue-800">{l.entityId.slice(0, 8)}…</div>}
+                      {l.entityId && <div className="font-mono text-slate-600">{l.entityId.slice(0, 8)}…</div>}
                     </td>
                     <td className={`${tdClass} max-w-md text-xs`}>
                       {(l.before !== null || l.after !== null) && (
                         <details>
-                          <summary className="cursor-pointer text-upl-blue-800">Voir</summary>
+                          <summary className="cursor-pointer text-slate-600">Voir</summary>
                           <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap rounded bg-upl-blue-50 p-2">
                             {JSON.stringify({ avant: l.before, après: l.after }, null, 2)}
                           </pre>
                         </details>
                       )}
-                      {l.ip && <div className="text-upl-blue-800">IP {l.ip}</div>}
+                      {l.ip && <div className="text-slate-600">IP {l.ip}</div>}
                     </td>
                   </tr>
                 ))}
@@ -185,7 +185,7 @@ function Scans() {
                   <th className={thClass}>Mode</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-upl-blue-100">
+              <tbody className="divide-y divide-slate-200">
                 {list.data.items.map((s) => (
                   <tr key={s.id}>
                     <td className={`${tdClass} whitespace-nowrap`}>{formatDateTime(s.scannedAt)}</td>
@@ -198,7 +198,7 @@ function Scans() {
                     <td className={`${tdClass} text-xs`}>
                       {s.method === 'MANUAL' ? 'Manuel' : 'QR'}
                       {s.method === 'MANUAL' && s.userAgent?.includes('motif:') && (
-                        <div className="text-upl-blue-800">{s.userAgent.split('motif:')[1]?.trim()}</div>
+                        <div className="text-slate-600">{s.userAgent.split('motif:')[1]?.trim()}</div>
                       )}
                     </td>
                   </tr>

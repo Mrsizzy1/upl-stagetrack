@@ -123,7 +123,7 @@ export function StudentFormPage() {
               {(fid) => <Input id={fid} type="date" value={form.enrolledAt} onChange={set('enrolledAt')} required />}
             </Field>
             <Field label="Adresse e-mail">{(fid) => <Input id={fid} type="email" value={form.email} onChange={set('email')} />}</Field>
-            <Field label="Téléphone">{(fid) => <Input id={fid} type="tel" value={form.phone} onChange={set('phone')} placeholder="+243 …" />}</Field>
+            <Field label="Téléphone">{(fid) => <Input id={fid} type="tel" value={form.phone} onChange={set('phone')} placeholder="Numéro avec indicatif pays" />}</Field>
           </div>
         </Card>
 
@@ -170,7 +170,7 @@ export function StudentFormPage() {
 
         {!editing && (
           <Card title="Période de stage">
-            <p className="mb-3 text-sm text-upl-blue-800">Facultative ici : sans période de stage, l'étudiant n'est attendu à aucun pointage.</p>
+            <p className="mb-3 text-sm text-slate-600">Facultative ici : sans période de stage, l'étudiant n'est attendu à aucun pointage.</p>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Début">{(fid) => <Input id={fid} type="date" value={form.startDate} onChange={set('startDate')} required={Boolean(form.endDate)} />}</Field>
               <Field label="Fin">{(fid) => <Input id={fid} type="date" value={form.endDate} onChange={set('endDate')} required={Boolean(form.startDate)} min={form.startDate} />}</Field>

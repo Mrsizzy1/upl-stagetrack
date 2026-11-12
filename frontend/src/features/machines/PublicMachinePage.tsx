@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { UPLLogo } from '../../components/UPLLogo';
+import { PublicHeader } from '../../components/PublicHeader';
 import {
   AlertCircleIcon,
   CheckCircleIcon,
@@ -71,25 +71,8 @@ export function PublicMachinePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
-      {/* En-tête mobile officiel épuré */}
-      <header className="bg-upl-blue-900 text-white border-b border-upl-gold-500/40 px-4 py-3 shadow-xs">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <UPLLogo size="sm" priority />
-            <div className="leading-tight">
-              <span className="block font-bold text-sm tracking-tight">Portail UPL</span>
-              <span className="block text-[11px] text-upl-blue-200">Parc Informatique Universitaire</span>
-            </div>
-          </Link>
-          <Link
-            to="/"
-            className="text-xs text-upl-gold-500 font-semibold hover:text-upl-gold-400 transition-colors"
-          >
-            Accueil
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-dvh bg-slate-50 text-slate-900 flex flex-col">
+      <PublicHeader subtitle="Parc informatique" />
 
       {/* Contenu principal mobile épuré */}
       <main className="max-w-md w-full mx-auto p-4 flex-1 flex flex-col justify-start">
@@ -99,7 +82,7 @@ export function PublicMachinePage() {
           </div>
         ) : error || !machine ? (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6 text-center space-y-4">
-            <div className="h-12 w-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto">
+            <div className="h-12 w-12 rounded-full bg-danger-50 text-danger-600 flex items-center justify-center mx-auto">
               <AlertCircleIcon size={28} />
             </div>
             <div>
@@ -119,9 +102,9 @@ export function PublicMachinePage() {
           <div className="space-y-4 mt-2">
             {/* Message de succès après signalement */}
             {reportSuccess && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
-                <CheckCircleIcon size={20} className="text-emerald-700 shrink-0 mt-0.5" />
-                <div className="text-xs text-emerald-900">
+              <div className="bg-success-50 border border-success-200 rounded-xl p-4 flex items-start gap-3">
+                <CheckCircleIcon size={20} className="text-success-700 shrink-0 mt-0.5" />
+                <div className="text-xs text-success-900">
                   <p className="font-bold">Signalement enregistré</p>
                   <p className="mt-0.5">{reportSuccess}</p>
                 </div>
@@ -134,7 +117,7 @@ export function PublicMachinePage() {
                 Poste Informatique — Inventaire UPL
               </span>
 
-              <h1 className="text-2xl font-black text-upl-blue-950 tracking-tight">
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
                 {machine.name}
               </h1>
               <p className="font-mono text-xs font-bold text-slate-500 mt-1">
@@ -153,18 +136,18 @@ export function PublicMachinePage() {
               {/* État de fonctionnement en un coup d'œil */}
               <div className="mt-5">
                 {machine.generalStatus === 'FUNCTIONAL' ? (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-                    <CheckCircleIcon size={16} className="text-emerald-700" />
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-success-50 border border-success-200 text-success-800 text-xs font-bold">
+                    <CheckCircleIcon size={16} className="text-success-700" />
                     <span>Poste en service et fonctionnel</span>
                   </div>
                 ) : machine.generalStatus === 'DEFECTIVE' ? (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-bold">
-                    <AlertCircleIcon size={16} className="text-red-700" />
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-danger-50 border border-danger-200 text-danger-800 text-xs font-bold">
+                    <AlertCircleIcon size={16} className="text-danger-700" />
                     <span>Poste signalé en panne (Maintenance)</span>
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
-                    <AlertCircleIcon size={16} className="text-amber-700" />
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-upl-gold-50 border border-upl-gold-200 text-upl-gold-800 text-xs font-bold">
+                    <AlertCircleIcon size={16} className="text-upl-gold-700" />
                     <span>{MACHINE_STATUS_LABELS[machine.generalStatus]}</span>
                   </div>
                 )}
@@ -175,7 +158,7 @@ export function PublicMachinePage() {
             {!reportOpen ? (
               <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-200 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded-lg bg-upl-gold-50 text-upl-gold-800 flex items-center justify-center shrink-0">
                     <WrenchIcon size={18} />
                   </div>
                   <div>
@@ -236,7 +219,7 @@ export function PublicMachinePage() {
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="Ex : La souris ne clique plus, écran noir après allumage..."
+                      placeholder="Décrivez le problème réellement constaté"
                       value={issueDescription}
                       onChange={(e) => setIssueDescription(e.target.value)}
                       className="w-full rounded-lg border border-slate-300 p-2 text-xs bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-upl-blue-600"
@@ -249,7 +232,7 @@ export function PublicMachinePage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="Ex : Patrick (Étudiant L2 Info)"
+                      placeholder="Nom et qualité de la personne (facultatif)"
                       value={reporterName}
                       onChange={(e) => setReporterName(e.target.value)}
                       className="w-full rounded-lg border border-slate-300 p-2 text-xs bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-upl-blue-600"
@@ -323,8 +306,8 @@ export function PublicMachinePage() {
                           <span
                             className={`text-[9px] font-bold px-1 rounded ${
                               c.state === 'FUNCTIONAL'
-                                ? 'text-emerald-700 bg-emerald-50'
-                                : 'text-red-700 bg-red-50'
+                                ? 'text-success-700 bg-success-50'
+                                : 'text-danger-700 bg-danger-50'
                             }`}
                           >
                             {COMPONENT_STATE_LABELS[c.state]}

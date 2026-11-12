@@ -101,7 +101,7 @@ export function StudentDetailPage() {
             <AuthImage
               src={s.hasPhoto ? `/students/${id}/photo?v=${qrVersion}` : null}
               alt={`Photo de ${fullName(s)}`}
-              className="h-32 w-26 shrink-0 rounded object-cover ring-1 ring-upl-blue-100"
+              className="h-32 w-26 shrink-0 rounded object-cover ring-1 ring-slate-200"
               fallback={<PhotoPlaceholder className="h-32 w-26 shrink-0 rounded" />}
             />
             <dl className="space-y-1 text-sm">
@@ -123,7 +123,7 @@ export function StudentDetailPage() {
               {isAdmin && (
                 <AuthImage src={`/students/${id}/qr.png?v=${qrVersion}`} alt="QR Code de l'étudiant" className="mx-auto h-44 w-44" />
               )}
-              <p className="mt-2 text-sm text-upl-blue-800">Actif depuis le {formatDateTime(s.activeQrIssuedAt)}</p>
+              <p className="mt-2 text-sm text-slate-600">Actif depuis le {formatDateTime(s.activeQrIssuedAt)}</p>
             </>
           ) : (
             <Alert tone="warning">Aucun QR Code actif : l'étudiant ne peut pas pointer par QR.</Alert>
@@ -151,7 +151,7 @@ export function StudentDetailPage() {
             </div>
           )}
           {qrHistory.data && qrHistory.data.length > 1 && (
-            <details className="mt-4 text-xs text-upl-blue-800">
+            <details className="mt-4 text-xs text-slate-600">
               <summary className="cursor-pointer">Historique ({qrHistory.data.length})</summary>
               <ul className="mt-2 space-y-1">
                 {qrHistory.data.map((q) => (
@@ -172,11 +172,11 @@ export function StudentDetailPage() {
                 Identifiant : <span className="font-mono">{s.account.username}</span>
               </dd>
               <dd>{s.account.isActive ? <Badge tone="success">Actif</Badge> : <Badge tone="danger">Désactivé</Badge>}</dd>
-              <dd className="text-upl-blue-800">Dernière connexion : {formatDateTime(s.account.lastLoginAt)}</dd>
+              <dd className="text-slate-600">Dernière connexion : {formatDateTime(s.account.lastLoginAt)}</dd>
             </dl>
           ) : (
             <>
-              <p className="text-sm text-upl-blue-800">L'étudiant n'a pas encore de compte pour consulter son espace.</p>
+              <p className="text-sm text-slate-600">L'étudiant n'a pas encore de compte pour consulter son espace.</p>
               {isAdmin && (
                 <Button className="mt-3" variant="secondary" onClick={() => setModal('account')}>
                   Créer le compte
@@ -211,7 +211,7 @@ export function StudentDetailPage() {
                   {isAdmin && <th className={thClass}><span className="sr-only">Actions</span></th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-upl-blue-100">
+              <tbody className="divide-y divide-slate-200">
                 {s.internships.map((i) => (
                   <tr key={i.id}>
                     <td className={tdClass}>{formatDate(i.startDate)}</td>
@@ -256,14 +256,14 @@ export function StudentDetailPage() {
                   {isAdmin && <th className={thClass}><span className="sr-only">Actions</span></th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-upl-blue-100">
+              <tbody className="divide-y divide-slate-200">
                 {history.data.items.map((r) => (
                   <tr key={r.id}>
                     <td className={tdClass}>{formatDate(r.date)}</td>
                     <td className={tdClass}>{SESSION_LABELS[r.sessionType]}</td>
                     <td className={tdClass}>
                       <Badge tone={attendanceTone(r.status)}>{ATTENDANCE_LABELS[r.status]}</Badge>
-                      {r.isCorrected && <span className="ml-2 text-xs text-upl-blue-800">corrigé</span>}
+                      {r.isCorrected && <span className="ml-2 text-xs text-slate-600">corrigé</span>}
                     </td>
                     <td className={`${tdClass} tabular-nums`}>{formatTime(r.recordedAt)}</td>
                     <td className={tdClass}>{METHOD_LABELS[r.method]}</td>
@@ -362,7 +362,7 @@ function PhotoActions({ studentId, hasPhoto, onDone, onError }: { studentId: str
           Retirer
         </Button>
       )}
-      <p className="w-full text-xs text-upl-blue-800">JPEG ou PNG, 2 Mo maximum.</p>
+      <p className="w-full text-xs text-slate-600">JPEG ou PNG, 2 Mo maximum.</p>
     </div>
   );
 }
@@ -579,7 +579,7 @@ function InternshipModal({ open, studentId, internship, onClose, onDone }: { ope
       <Field label="Service d'accueil">
         {(fid) => <Input id={fid} value={form.hostService} onChange={(e) => setForm({ ...form, hostService: e.target.value })} maxLength={150} />}
       </Field>
-      {internship && <p className="text-xs text-upl-blue-800">Seule une période qui n'a pas encore commencé peut être supprimée.</p>}
+      {internship && <p className="text-xs text-slate-600">Seule une période qui n'a pas encore commencé peut être supprimée.</p>}
     </Modal>
   );
 }

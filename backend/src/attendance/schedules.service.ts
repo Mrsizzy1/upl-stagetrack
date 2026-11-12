@@ -69,7 +69,7 @@ export class SchedulesService {
       Promise.all(
         SESSION_TYPES.map((sessionType) =>
           this.prisma.attendanceSchedule.findFirst({
-            where: { sessionType, effectiveFrom: { lte: dbDate } },
+            where: { sessionType, effectiveFrom: { lte: dbDate }, approved: true },
             orderBy: { effectiveFrom: 'desc' },
           }),
         ),
@@ -136,7 +136,7 @@ export class SchedulesService {
     const today = this.today();
     const current = await this.dayPlan(today);
     const upcoming = await this.prisma.attendanceSchedule.findMany({
-      where: { effectiveFrom: { gt: toDbDate(today) } },
+      where: { effectiveFrom: { gt: toDbDate(today) }, approved: true },
       orderBy: [{ effectiveFrom: 'asc' }, { sessionType: 'asc' }],
     });
     const view = (w: { sessionType: SessionType; opensAtMinute: number; closesAtMinute: number; lateAfterMinute: number | null; activeWeekdays: readonly number[] }) => ({
@@ -189,6 +189,7 @@ export class SchedulesService {
           closesAtMinute: w.closesAtMinute,
           lateAfterMinute: w.lateAfterMinute,
           activeWeekdays: [...w.activeWeekdays],
+          approved: true,
           createdById: actor.id,
         };
         await tx.attendanceSchedule.upsert({

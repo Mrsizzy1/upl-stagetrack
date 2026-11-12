@@ -135,21 +135,21 @@ export function AttendancePage() {
                     {user.role === 'ADMIN' && <th className={thClass}><span className="sr-only">Actions</span></th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-upl-blue-100">
+                <tbody className="divide-y divide-slate-200">
                   {list.data.items.map((row) => (
                     <tr key={row.id}>
                       <td className={tdClass}>
                         <Link to={`/etudiants/${row.student.id}`} className="font-medium text-upl-blue-900 hover:underline">
                           {fullName(row.student)}
                         </Link>
-                        <div className="text-xs text-upl-blue-800">{row.student.matricule}</div>
+                        <div className="text-xs text-slate-600">{row.student.matricule}</div>
                       </td>
                       <td className={tdClass}>{row.student.faculty.code}</td>
                       <td className={tdClass}>{SESSION_LABELS[row.sessionType]}</td>
                       <td className={tdClass}>
                         <Badge tone={attendanceTone(row.status)}>{ATTENDANCE_LABELS[row.status]}</Badge>
                         {row.isCorrected && (
-                          <div className="mt-1 text-xs text-upl-blue-800" title={row.corrections[0]?.reason}>
+                          <div className="mt-1 text-xs text-slate-600" title={row.corrections[0]?.reason}>
                             Corrigé le {formatDateTime(row.corrections[0]?.createdAt)} par {row.corrections[0]?.correctedBy.fullName}
                           </div>
                         )}
@@ -157,7 +157,7 @@ export function AttendancePage() {
                       <td className={`${tdClass} tabular-nums`}>{formatTime(row.recordedAt)}</td>
                       <td className={tdClass}>
                         {METHOD_LABELS[row.method]}
-                        {row.manualReason && <div className="text-xs text-upl-blue-800">Motif : {row.manualReason}</div>}
+                        {row.manualReason && <div className="text-xs text-slate-600">Motif : {row.manualReason}</div>}
                       </td>
                       {user.role === 'ADMIN' && (
                         <td className={`${tdClass} text-right`}>

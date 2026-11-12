@@ -1,3 +1,4 @@
+import { buildSettingsUpdate } from '../domain/settings/settings-update';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../common/audit/audit.service';
@@ -133,12 +134,9 @@ export class SupervisionService {
       setting = await this.prisma.institutionSetting.create({
         data: {
           institutionName: 'Université Protestante de Lubumbashi',
-          facultyName: 'Faculté des Sciences Informatiques',
+          facultyName: '',
           acronym: 'UPL',
           logoUrl: '/brand/upl-logo.png',
-          contactEmail: 'contact@upl-univ.ac',
-          contactPhone: '+243 000 000 000',
-          address: 'Lubumbashi, RDC',
           portalSubtitle: 'Portail numérique unifié des services universitaires',
         },
       });
@@ -149,26 +147,15 @@ export class SupervisionService {
   async updateSettings(dto: UpdateSettingsDto, actor: AuthUser, ip?: string | null) {
     const current = await this.getSettings();
 
-    const updated = await this.prisma.institutionSetting.update({
-      where: { id: current.id },
-      data: {
-        ...(dto.institutionName ? { institutionName: dto.institutionName.trim() } : {}),
-        ...(dto.facultyName ? { facultyName: dto.facultyName.trim() } : {}),
-        ...(dto.acronym ? { acronym: dto.acronym.trim() } : {}),
-        ...(dto.logoUrl ? { logoUrl: dto.logoUrl.trim() } : {}),
-        ...(dto.contactEmail !== undefined ? { contactEmail: dto.contactEmail?.trim() } : {}),
-        ...(dto.contactPhone !== undefined ? { contactPhone: dto.contactPhone?.trim() } : {}),
-        ...(dto.address !== undefined ? { address: dto.address?.trim() } : {}),
-        ...(dto.portalSubtitle !== undefined ? { portalSubtitle: dto.portalSubtitle?.trim() } : {}),
-      },
-    });
+    const data = buildSettingsUpdate(dto);
+    const updated = await this.prisma.institutionSetting.update({ where: { id: current.id }, data });
 
     await this.audit.log({
       actorId: actor.id,
       action: 'INSTITUTION_SETTINGS_UPDATED',
       entityType: 'InstitutionSetting',
       entityId: current.id,
-      after: dto,
+      after: data,
       ip: ip ?? null,
     });
 

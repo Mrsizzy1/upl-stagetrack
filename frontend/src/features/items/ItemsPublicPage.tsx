@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router';
-import { UPLLogo } from '../../components/UPLLogo';
+import { BoxIcon } from '../../components/Icons';
+import { PublicHeader } from '../../components/PublicHeader';
 import {
   Alert,
   Badge,
   Button,
+  buttonClass,
   Card,
   Empty,
   ErrorAlert,
@@ -19,6 +21,7 @@ import {
 } from '../../components/ui';
 import { api, ApiError, qs } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { homeFor } from '../../lib/routes';
 import { formatDate, ITEM_CATEGORY_LABELS, ITEM_TYPE_LABELS } from '../../lib/format';
 import type { ItemCategory, ItemType, Paginated, PublicItemListItem } from '../../lib/types';
 
@@ -46,48 +49,21 @@ export function ItemsPublicPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-upl-blue-950 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* En-tête public spécifique */}
-      <header className="bg-white border-b border-upl-blue-100 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3">
-            <UPLLogo size="md" />
-            <div className="leading-tight">
-              <span className="block font-bold text-base text-upl-blue-900">UPL StageTrack</span>
-              <span className="block text-xs text-slate-500">Portail des Objets Perdus & Retrouvés</span>
-            </div>
+      <PublicHeader subtitle="Objets perdus et trouvés">
+        {state.status === 'authenticated' ? (
+          <Link to={['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(state.user.role) ? '/admin/objets' : homeFor(state.user.role)} className={buttonClass('secondary', 'sm')}>
+            {['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(state.user.role) ? 'Espace de modération' : 'Mon espace'}
           </Link>
-          <div className="flex items-center gap-3">
-            {state.status === 'authenticated' ? (
-              <>
-                <Link
-                  to={['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(state.user.role) ? '/admin/objets' : '/hub'}
-                  className="text-xs font-semibold text-upl-blue-800 bg-upl-blue-50 px-3 py-1.5 rounded-lg hover:bg-upl-blue-100"
-                >
-                  ← Retour à mon espace ({state.user.username})
-                </Link>
-                {['ADMIN', 'SUPER_ADMIN', 'FACULTY_ADMIN'].includes(state.user.role) && (
-                  <Link
-                    to="/admin/objets"
-                    className="text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100"
-                  >
-                    Espace modération
-                  </Link>
-                )}
-              </>
-            ) : (
-              <Link to="/" className="text-sm font-semibold text-upl-blue-700 hover:underline">
-                ← Retour à l'accueil
-              </Link>
-            )}
-            <Button variant="primary" onClick={() => setDeclareOpen(true)}>
-              + Déclarer un objet
-            </Button>
-          </div>
-        </div>
-      </header>
+        ) : (
+          <Link to="/connexion" className={buttonClass('ghost', 'sm')}>
+            Connexion
+          </Link>
+        )}
+      </PublicHeader>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         <PageHeader
           title="Objets perdus et retrouvés"
           description="Consultez les objets déclarés égarés ou retrouvés au sein de la faculté. Vous pouvez rechercher un objet ou soumettre une déclaration en cas de perte ou de découverte."
@@ -134,7 +110,7 @@ export function ItemsPublicPage() {
               <label className="block text-xs font-semibold text-slate-600 mb-1">Recherche par mot-clé ou lieu</label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Ex: Clé USB, Sac noir, Salle 104..."
+                  placeholder="Objet, lieu ou description recherchés"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') setPage(1); }}
@@ -180,7 +156,10 @@ export function ItemsPublicPage() {
                         loading="lazy"
                       />
                     ) : (
-                      <span className="text-4xl text-slate-300 font-bold">UPL</span>
+                      <span className="flex flex-col items-center gap-2 text-slate-400">
+                        <BoxIcon size={36} />
+                        <span className="text-xs font-medium">Aucune photo</span>
+                      </span>
                     )}
                     <div className="absolute top-3 left-3">
                       <Badge tone={item.type === 'LOST' ? 'danger' : 'success'}>
@@ -197,7 +176,7 @@ export function ItemsPublicPage() {
                       <span>Le {formatDate(item.eventDate)}</span>
                     </div>
 
-                    <h3 className="font-bold text-base text-upl-blue-950 line-clamp-1">{item.title}</h3>
+                    <h3 className="font-bold text-base text-slate-900 line-clamp-1">{item.title}</h3>
                     <p className="mt-2 text-xs text-slate-600 line-clamp-3 leading-relaxed">
                       {item.description}
                     </p>
@@ -325,7 +304,7 @@ function DeclareItemModal({
               id={id}
               required
               minLength={3}
-              placeholder="Ex: Clé USB Kingston 64 Go"
+              placeholder="Nom précis de l'objet"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -339,7 +318,7 @@ function DeclareItemModal({
               required
               minLength={10}
               rows={3}
-              placeholder="Décrivez l'objet de manière précise..."
+              placeholder="Description fondée sur les éléments observés"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -364,7 +343,7 @@ function DeclareItemModal({
               <Input
                 id={id}
                 required
-                placeholder="Ex: Laboratoire 1, Salle 204"
+                placeholder="Lieu exact où l'objet a été perdu ou trouvé"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />

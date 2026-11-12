@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
+  Equals,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -13,6 +14,12 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+
+export class DeleteAllMachinesDto {
+  @IsString()
+  @Equals('SUPPRIMER TOUTES LES MACHINES')
+  confirmation!: string;
+}
 
 export class CreateMachineDto {
   @IsUUID()

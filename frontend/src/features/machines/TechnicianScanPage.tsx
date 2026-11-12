@@ -135,7 +135,7 @@ export function TechnicianScanPage() {
               </label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Ex: 9b1deb4d-3b7d-4bad... ou code machine"
+                  placeholder="Code réel de la machine"
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   onKeyDown={(e) => {
@@ -173,7 +173,7 @@ export function TechnicianScanPage() {
                     {MACHINE_STATUS_LABELS[machine.generalStatus]}
                   </Badge>
                 </div>
-                <h3 className="font-extrabold text-base text-upl-blue-950">{machine.name}</h3>
+                <h3 className="font-extrabold text-base text-slate-900">{machine.name}</h3>
                 <p className="text-xs text-slate-600 mt-1">
                   {machine.laboratory} — {machine.row} (Poste #{machine.position})
                 </p>
@@ -187,7 +187,7 @@ export function TechnicianScanPage() {
                     <div key={c.code} className="flex justify-between items-center bg-white p-2 rounded border border-slate-100">
                       <span className="text-slate-700">{c.name}</span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        c.state === 'FUNCTIONAL' ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'
+                        c.state === 'FUNCTIONAL' ? 'text-success-700 bg-success-50' : 'text-danger-700 bg-danger-50'
                       }`}>
                         {c.state}
                       </span>

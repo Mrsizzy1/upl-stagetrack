@@ -75,7 +75,7 @@ export function DashboardPage() {
   return (
     <div>
       <PageHeader title="Tableau de bord" description="Chiffres calculés en direct à partir des pointages enregistrés." />
-      <div className="mb-6 grid gap-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-upl-blue-100 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Date">{(id) => <Input id={id} type="date" value={filters.date} onChange={set('date')} />}</Field>
         <Field label="Faculté">
           {(id) => (
@@ -153,7 +153,7 @@ export function DashboardPage() {
                     </ResponsiveContainer>
                   </div>
                   <details className="mt-3 text-sm">
-                    <summary className="cursor-pointer text-upl-blue-800">Voir les données en tableau</summary>
+                    <summary className="cursor-pointer text-slate-600">Voir les données en tableau</summary>
                     <TableWrap>
                       <table className={`${tableClass} mt-2`}>
                         <thead>
@@ -165,7 +165,7 @@ export function DashboardPage() {
                             <th className={`${thClass} text-right`}>Taux</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-upl-blue-100">
+                        <tbody className="divide-y divide-slate-200">
                           {d.trend.map((t) => (
                             <tr key={t.date}>
                               <td className={tdClass}>{formatDate(t.date)}</td>
@@ -187,14 +187,14 @@ export function DashboardPage() {
               {d.recent.length === 0 ? (
                 <Empty>Aucun pointage ce jour-là.</Empty>
               ) : (
-                <ul className="divide-y divide-upl-blue-100">
+                <ul className="divide-y divide-slate-200">
                   {d.recent.map((r) => (
                     <li key={r.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                       <div>
                         <Link to={`/etudiants/${r.student.id}`} className="font-medium text-upl-blue-900 hover:underline">
                           {r.student.lastName.toUpperCase()} {r.student.firstName}
                         </Link>
-                        <p className="text-xs text-upl-blue-800">
+                        <p className="text-xs text-slate-600">
                           {r.student.matricule} · {r.student.faculty.code} · {SESSION_LABELS[r.sessionType]} · {METHOD_LABELS[r.method]}
                         </p>
                       </div>
