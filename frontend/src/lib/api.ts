@@ -5,6 +5,8 @@
  *  - Sur une réponse 401, une seule tentative de rafraîchissement, partagée par les requêtes en cours.
  * Les erreurs suivent le format de l'API : { statusCode, code, message, details? }.
  */
+import type { Role } from './types';
+
 export class ApiError extends Error {
   constructor(
     public readonly statusCode: number,
@@ -24,7 +26,7 @@ export interface SessionUser {
   username: string;
   fullName: string;
   email: string | null;
-  role: 'ADMIN' | 'SUPERVISOR' | 'SCAN_AGENT' | 'STUDENT';
+  role: Role;
   studentId: string | null;
   mustChangePassword: boolean;
 }

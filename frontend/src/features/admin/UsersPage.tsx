@@ -23,7 +23,15 @@ import { useUser } from '../../lib/auth';
 import { formatDateTime, ROLE_LABELS } from '../../lib/format';
 import type { Paginated, Role, UserView } from '../../lib/types';
 
-const STAFF: Role[] = ['ADMIN', 'SUPERVISOR', 'SCAN_AGENT'];
+const STAFF: Role[] = [
+  'SUPER_ADMIN',
+  'FACULTY_ADMIN',
+  'ADMIN',
+  'INTERNSHIP_MANAGER',
+  'SUPERVISOR',
+  'SCAN_AGENT',
+  'IT_TECHNICIAN',
+];
 
 export function UsersPage() {
   const me = useUser();

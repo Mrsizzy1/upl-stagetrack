@@ -3,7 +3,15 @@ import { IsBoolean, IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, Min
 import { PaginationQueryDto } from '../common/http/pagination.dto';
 
 /** Rôles attribuables depuis la gestion des comptes. Les comptes étudiants se créent depuis la fiche étudiant. */
-export const STAFF_ROLES = ['ADMIN', 'SUPERVISOR', 'SCAN_AGENT'] as const;
+export const STAFF_ROLES = [
+  'SUPER_ADMIN',
+  'FACULTY_ADMIN',
+  'ADMIN',
+  'SUPERVISOR',
+  'INTERNSHIP_MANAGER',
+  'SCAN_AGENT',
+  'IT_TECHNICIAN',
+] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);

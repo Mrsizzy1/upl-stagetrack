@@ -1,5 +1,14 @@
 /** Formes des réponses de l'API utilisées par l'interface. */
-export type Role = 'ADMIN' | 'SUPERVISOR' | 'SCAN_AGENT' | 'STUDENT';
+export type Role =
+  | 'ADMIN'
+  | 'SUPERVISOR'
+  | 'SCAN_AGENT'
+  | 'STUDENT'
+  | 'SUPER_ADMIN'
+  | 'FACULTY_ADMIN'
+  | 'INTERNSHIP_MANAGER'
+  | 'IT_TECHNICIAN'
+  | 'INTERN';
 export type SessionType = 'MORNING' | 'EVENING';
 export type AttendanceStatus = 'PRESENT' | 'LATE' | 'ABSENT';
 export type StudentStatus = 'ACTIVE' | 'SUSPENDED' | 'COMPLETED';
@@ -155,4 +164,273 @@ export interface ScheduleView {
   lateAfter: string | null;
   weekdays: number[];
   effectiveFrom: string;
+}
+
+// ----------------------------------------------------------------------------
+// MODULE OBJETS PERDUS ET RETROUVÉS
+// ----------------------------------------------------------------------------
+
+export type ItemType = 'LOST' | 'FOUND';
+
+export type ItemCategory =
+  | 'ELECTRONICS'
+  | 'DOCUMENTS'
+  | 'BAGS'
+  | 'CLOTHING'
+  | 'KEYS'
+  | 'JEWELRY'
+  | 'BOOKS'
+  | 'OTHER';
+
+export type ItemStatus =
+  | 'PENDING'
+  | 'PUBLISHED'
+  | 'CLAIM_REQUESTED'
+  | 'APPROVED'
+  | 'RETURNED'
+  | 'REJECTED'
+  | 'CLOSED';
+
+export type ClaimStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface PublicItemListItem {
+  id: string;
+  type: ItemType;
+  title: string;
+  category: ItemCategory;
+  description: string;
+  photoPath: string | null;
+  eventDate: string;
+  location: string;
+  status: ItemStatus;
+  createdAt: string;
+}
+
+export interface AdminItemListItem extends PublicItemListItem {
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  rejectionReason: string | null;
+  createdBy?: { id: string; fullName: string; username: string } | null;
+  approvedBy?: { id: string; fullName: string } | null;
+  _count: { claims: number };
+}
+
+export interface ItemClaimItem {
+  id: string;
+  declarationId: string;
+  claimantName: string;
+  claimantPhone: string;
+  claimantEmail: string | null;
+  proofDescription: string;
+  proofPhotoPath: string | null;
+  status: ClaimStatus;
+  reviewNotes: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  reviewedBy?: { id: string; fullName: string } | null;
+}
+
+// ----------------------------------------------------------------------------
+// MODULE LABORATOIRES ET MACHINES PAR QR CODE
+// ----------------------------------------------------------------------------
+
+export type MachineStatus = 'FUNCTIONAL' | 'TO_CHECK' | 'DEFECTIVE' | 'MAINTENANCE' | 'OUT_OF_SERVICE';
+
+export type ComponentState = 'FUNCTIONAL' | 'DEFECTIVE' | 'MISSING' | 'TO_CHECK' | 'NOT_APPLICABLE';
+
+export type InterventionPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type InterventionStatus = 'REPORTED' | 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'UNRESOLVED' | 'CLOSED';
+
+export interface ComponentType {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+}
+
+export interface MachineComponentItem {
+  id: string;
+  state: ComponentState;
+  notes: string | null;
+  componentType: ComponentType;
+}
+
+export interface MachineListItem {
+  id: string;
+  code: string;
+  name: string;
+  positionInRow: number;
+  brand: string | null;
+  model: string | null;
+  generalStatus: MachineStatus;
+  publicToken: string;
+  lastControlAt: string | null;
+  components?: MachineComponentItem[];
+  _count?: { interventions: number };
+}
+
+export interface LaboratoryRow {
+  id: string;
+  code: string;
+  name: string;
+  sortOrder: number;
+  machines?: MachineListItem[];
+}
+
+export interface LaboratoryListItem {
+  id: string;
+  code: string;
+  name: string;
+  building: string;
+  location: string;
+  description: string | null;
+  isActive: boolean;
+  manager?: { id: string; fullName: string; username: string } | null;
+  rows?: LaboratoryRow[];
+  _count: { machines: number; rows: number };
+  stats: {
+    total: number;
+    functional: number;
+    toCheck: number;
+    defective: number;
+    maintenance: number;
+    outOfService: number;
+  };
+}
+
+export interface MachineDetail extends MachineListItem {
+  serialNumber: string | null;
+  acquisitionDate: string | null;
+  specifications: string | null;
+  photoPath: string | null;
+  laboratory: { id: string; code: string; name: string; building: string; location: string };
+  row: { id: string; code: string; name: string; sortOrder: number };
+  lastControlBy: { id: string; fullName: string } | null;
+  components: MachineComponentItem[];
+  interventions: {
+    id: string;
+    title: string;
+    priority: InterventionPriority;
+    status: InterventionStatus;
+    reportedAt: string;
+    technician: { id: string; fullName: string } | null;
+  }[];
+}
+
+export interface MachineControlHistoryItem {
+  id: string;
+  controlledAt: string;
+  generalStatus: MachineStatus;
+  observations: string | null;
+  photoPath: string | null;
+  technician: { id: string; fullName: string; username: string };
+  details: {
+    id: string;
+    componentName: string;
+    previousState: ComponentState;
+    newState: ComponentState;
+    notes: string | null;
+  }[];
+}
+
+export interface TechnicalInterventionItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: InterventionPriority;
+  status: InterventionStatus;
+  reportedAt: string;
+  startedAt: string | null;
+  resolvedAt: string | null;
+  closedAt: string | null;
+  resolutionReport: string | null;
+  replacedParts: string | null;
+  machine: {
+    id: string;
+    code: string;
+    name: string;
+    laboratory: { id: string; name: string; code: string };
+    row: { code: string; name: string };
+  };
+  technician: { id: string; fullName: string } | null;
+  reportedBy: { id: string; fullName: string } | null;
+}
+
+export interface PublicMachineView {
+  code: string;
+  name: string;
+  laboratory: string;
+  building: string;
+  location: string;
+  row: string;
+  position: number;
+  brand: string | null;
+  model: string | null;
+  specifications: string | null;
+  generalStatus: MachineStatus;
+  lastControlAt: string | null;
+  components: {
+    name: string;
+    code: string;
+    state: ComponentState;
+  }[];
+  missingComponents: string[];
+  defectiveComponents: string[];
+  toCheckComponents: string[];
+}
+
+export interface InstitutionSetting {
+  id: string;
+  institutionName: string;
+  facultyName: string;
+  acronym: string;
+  logoUrl: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
+  portalSubtitle: string | null;
+  updatedAt: string;
+}
+
+export interface SupervisionOverview {
+  stages: {
+    activeStudents: number;
+    activeInternships: number;
+    todayAttendances: {
+      total: number;
+      present: number;
+      late: number;
+      absent: number;
+      morningCount: number;
+      eveningCount: number;
+    };
+    attendanceRate: number | null;
+  };
+  items: {
+    total: number;
+    lost: number;
+    found: number;
+    pending: number;
+    claimRequested: number;
+    returned: number;
+  };
+  labs: {
+    laboratoriesCount: number;
+    rowsCount: number;
+    machines: {
+      total: number;
+      functional: number;
+      toCheck: number;
+      defective: number;
+      maintenance: number;
+      outOfService: number;
+      availabilityRate: number;
+    };
+    activeInterventions: number;
+    criticalInterventions: number;
+  };
+  serverTime: string;
 }

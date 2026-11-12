@@ -72,9 +72,19 @@ export class AuthGuard implements CanActivate {
     }
 
     const roles = this.reflector.getAllAndOverride<RoleCode[] | undefined>(ROLES_KEY, targets);
-    if (!roles || roles.length === 0 || !roles.includes(user.role.code)) {
+    if (!roles || roles.length === 0 || !this.isRoleAllowed(user.role.code, roles)) {
       throw new ForbiddenException({ code: 'FORBIDDEN', message: "Accès refusé pour votre rôle" });
     }
     return true;
+  }
+
+  private isRoleAllowed(userRole: RoleCode, allowedRoles: RoleCode[]): boolean {
+    if (allowedRoles.includes(userRole)) return true;
+    if (userRole === 'SUPER_ADMIN') return true;
+    if (allowedRoles.includes('ADMIN') && userRole === 'FACULTY_ADMIN') return true;
+    if (allowedRoles.includes('STUDENT') && userRole === 'INTERN') return true;
+    if (allowedRoles.includes('INTERN') && userRole === 'STUDENT') return true;
+    if (allowedRoles.includes('SUPERVISOR') && (userRole === 'INTERNSHIP_MANAGER' || userRole === 'FACULTY_ADMIN')) return true;
+    return false;
   }
 }

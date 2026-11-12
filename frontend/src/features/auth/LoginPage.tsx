@@ -1,5 +1,5 @@
-import { FormEvent, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router';
+import { FormEvent, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button, ErrorAlert, Field, Input } from '../../components/ui';
 import { AUTH_BUTTON, AUTH_FORM, AUTH_INPUT, AUTH_SECONDARY, AuthBrand, AuthFrame } from '../../components/AuthLayout';
 import { useAuth } from '../../lib/auth';
@@ -13,21 +13,23 @@ export function LoginPage() {
   const [error, setError] = useState<unknown>(null);
   const [pending, setPending] = useState(false);
 
-  if (state.status === 'authenticated') {
-    return <Navigate to={state.user.mustChangePassword ? '/changer-mot-de-passe' : homeFor(state.user.role)} replace />;
-  }
+  useEffect(() => {
+    if (state.status === 'authenticated') {
+      const dest = state.user.mustChangePassword ? '/changer-mot-de-passe' : homeFor(state.user.role);
+      navigate(dest, { replace: true });
+    }
+  }, [state, navigate]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
     try {
-      const user = await login(username, password);
-      navigate(user.mustChangePassword ? '/changer-mot-de-passe' : homeFor(user.role), { replace: true });
+      await login(username, password);
+      // La transition d'état vers 'authenticated' déclenche automatiquement la navigation via le useEffect ci-dessus
     } catch (err) {
       setError(err);
       setPassword('');
-    } finally {
       setPending(false);
     }
   }

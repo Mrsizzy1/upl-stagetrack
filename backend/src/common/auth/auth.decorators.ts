@@ -33,5 +33,15 @@ export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionC
   return ctx.switchToHttp().getRequest<AuthenticatedRequest>().user;
 });
 
-/** Les quatre rôles, pour les routes de consultation communes. */
-export const ALL_ROLES: RoleCode[] = ['ADMIN', 'SUPERVISOR', 'SCAN_AGENT', 'STUDENT'];
+/** Tous les rôles du système, pour les routes de consultation communes. */
+export const ALL_ROLES: RoleCode[] = [
+  'ADMIN',
+  'SUPERVISOR',
+  'SCAN_AGENT',
+  'STUDENT',
+  'SUPER_ADMIN',
+  'FACULTY_ADMIN',
+  'INTERNSHIP_MANAGER',
+  'IT_TECHNICIAN',
+  'INTERN',
+];

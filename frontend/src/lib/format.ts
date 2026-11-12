@@ -29,6 +29,69 @@ export const ROLE_LABELS = {
   SUPERVISOR: 'Responsable de stage',
   SCAN_AGENT: 'Agent de pointage',
   STUDENT: 'Étudiant',
+  SUPER_ADMIN: 'Super Administrateur',
+  FACULTY_ADMIN: 'Administrateur de Faculté',
+  INTERNSHIP_MANAGER: 'Gestionnaire des Stages',
+  IT_TECHNICIAN: 'Technicien Informatique',
+  INTERN: 'Stagiaire',
+} as const;
+
+export const ITEM_TYPE_LABELS = {
+  LOST: 'Objet perdu',
+  FOUND: 'Objet retrouvé',
+} as const;
+
+export const ITEM_CATEGORY_LABELS = {
+  ELECTRONICS: 'Électronique',
+  DOCUMENTS: 'Documents & Papiers',
+  BAGS: 'Sacs & Bagages',
+  CLOTHING: 'Vêtements',
+  KEYS: 'Clés & Badges',
+  JEWELRY: 'Bijoux & Montres',
+  BOOKS: 'Livres & Syllabi',
+  OTHER: 'Autre',
+} as const;
+
+export const ITEM_STATUS_LABELS = {
+  PENDING: 'En attente de validation',
+  PUBLISHED: 'Publié',
+  CLAIM_REQUESTED: 'Réclamation en cours',
+  APPROVED: 'Réclamation approuvée',
+  RETURNED: 'Restitué',
+  REJECTED: 'Rejeté',
+  CLOSED: 'Clôturé',
+} as const;
+
+export const MACHINE_STATUS_LABELS = {
+  FUNCTIONAL: 'Fonctionnelle',
+  TO_CHECK: 'À vérifier',
+  DEFECTIVE: 'Défectueuse',
+  MAINTENANCE: 'En maintenance',
+  OUT_OF_SERVICE: 'Hors service',
+} as const;
+
+export const COMPONENT_STATE_LABELS = {
+  FUNCTIONAL: 'Fonctionnel',
+  DEFECTIVE: 'Défectueux',
+  MISSING: 'Manquant',
+  TO_CHECK: 'À vérifier',
+  NOT_APPLICABLE: 'Non applicable',
+} as const;
+
+export const INTERVENTION_PRIORITY_LABELS = {
+  LOW: 'Basse',
+  MEDIUM: 'Moyenne',
+  HIGH: 'Haute',
+  CRITICAL: 'Critique',
+} as const;
+
+export const INTERVENTION_STATUS_LABELS = {
+  REPORTED: 'Signalée',
+  PENDING: 'En attente',
+  IN_PROGRESS: 'En cours',
+  RESOLVED: 'Résolue',
+  UNRESOLVED: 'Non résolue',
+  CLOSED: 'Clôturée',
 } as const;
 
 export const SESSION_LABELS = { MORNING: 'Matin', EVENING: 'Soir' } as const;

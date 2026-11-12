@@ -10,9 +10,13 @@ import { AuthGuard } from './common/auth/auth.guard';
 import { ClockModule } from './common/clock/clock.module';
 import { validateEnv } from './config/env.validation';
 import { HealthModule } from './health/health.module';
+import { ItemsModule } from './items/items.module';
+import { LabsModule } from './labs/labs.module';
+import { MachinesModule } from './machines/machines.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReportsModule } from './reports/reports.module';
 import { StudentsModule } from './students/students.module';
+import { SupervisionModule } from './supervision/supervision.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -34,6 +38,10 @@ import { UsersModule } from './users/users.module';
     StudentsModule,
     AttendanceModule,
     ReportsModule,
+    ItemsModule,
+    LabsModule,
+    MachinesModule,
+    SupervisionModule,
   ],
   providers: [
     // Ordre : limitation de débit, puis authentification et rôles (refus par défaut).

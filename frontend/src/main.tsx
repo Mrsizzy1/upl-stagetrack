@@ -8,6 +8,32 @@ import { router } from './router';
 import '@fontsource-variable/inter';
 import './index.css';
 
+// Protection globale contre les extensions de navigateur (Google Translate, Grammarly, etc.)
+// qui modifient les nœuds DOM et provoquent "Failed to execute 'removeChild' on 'Node'".
+if (typeof Node === 'function' && Node.prototype) {
+  const originalRemoveChild = Node.prototype.removeChild;
+  Node.prototype.removeChild = function <T extends Node>(child: T): T {
+    if (child.parentNode !== this) {
+      if (console) {
+        console.warn('removeChild ignoré : le nœud n\'est plus un enfant direct de ce parent.', child, this);
+      }
+      return child;
+    }
+    return originalRemoveChild.apply(this, [child]) as T;
+  };
+
+  const originalInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function <T extends Node>(newNode: T, referenceNode: Node | null): T {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      if (console) {
+        console.warn('insertBefore ignoré : le nœud de référence n\'est plus un enfant direct.', referenceNode, this);
+      }
+      return newNode;
+    }
+    return originalInsertBefore.apply(this, [newNode, referenceNode]) as T;
+  };
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

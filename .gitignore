@@ -11,3 +11,4 @@ storage/
 deploy/certs/*
 !deploy/certs/.gitkeep
 backend/storage-test/
+.pgdata/

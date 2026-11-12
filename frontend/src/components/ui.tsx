@@ -237,7 +237,9 @@ export function Modal({ open, title, onClose, children, footer }: { open: boolea
           <header className="flex items-center justify-between border-b border-upl-blue-100 px-5 py-3">
             <h2 className="text-base font-semibold text-upl-blue-900">{title}</h2>
             <button type="button" onClick={onClose} className="rounded p-1 text-upl-blue-800 hover:bg-upl-blue-100" aria-label="Fermer">
-              ✕
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </header>
           <div className="space-y-4 px-5 py-4">{children}</div>
